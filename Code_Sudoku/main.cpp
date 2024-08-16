@@ -1,10 +1,12 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <array>
+#include "sudoku_interfaz.hpp"
 
 void ventana_Manual();
 void ventana_Principal();
 void ventana_Juego();
+void ventanaSudokuMedio();
 
 void ventana_Dificil() {
     const int tamanoCuadricula = 9;
@@ -266,6 +268,7 @@ void ventana_Juego()
                 else if (buttonMedio.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos)))
                 {
                     // Acción para el botón Medio
+                    ventanaSudokuMedio();
                 }
                 else if (buttonDificil.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos)))
                 {
@@ -536,6 +539,31 @@ void ventana_Principal()
         window.draw(jugarText);
         window.draw(buttoncomoJugar);
         window.draw(ComoJugarText);
+        window.display();
+    }
+}
+
+void ventanaSudokuMedio() {
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Jugar", sf::Style::Titlebar | sf::Style::Close);
+
+    sf::Font font;
+    if (!font.loadFromFile("Tipo_Letra2.ttf")) return;
+
+    sf::RectangleShape fondo(sf::Vector2f(800, 600));
+    fondo.setFillColor(sf::Color(250, 235, 215));
+
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+
+        window.clear();
+        window.draw(fondo);
+        graficarSudoku(window, 20, 20, 50, 5, sf::Color(105, 105, 105), sf::Color(169, 169, 169), sf::Color(240, 248, 255));
         window.display();
     }
 }
