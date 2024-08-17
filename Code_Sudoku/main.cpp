@@ -544,10 +544,20 @@ void ventana_Principal()
 }
 
 void ventanaSudokuMedio() {
+    Sudoku sudoku(0);
+    sudoku.setCasilla(3, 0, 0);
+    sudoku.llenar(0, 0);
+    sudoku.mostrarConsola();
+
     sf::RenderWindow window(sf::VideoMode(800, 600), "Jugar", sf::Style::Titlebar | sf::Style::Close);
 
     sf::Font font;
-    if (!font.loadFromFile("Tipo_Letra2.ttf")) return;
+    if (!font.loadFromFile("Tipo_Letra3.ttf")) return;
+
+    sf::Text text;
+    text.setFont(font);
+    text.setCharacterSize(24);
+    text.setFillColor(sf::Color(0, 0, 0));
 
     sf::RectangleShape fondo(sf::Vector2f(800, 600));
     fondo.setFillColor(sf::Color(250, 235, 215));
@@ -563,7 +573,7 @@ void ventanaSudokuMedio() {
 
         window.clear();
         window.draw(fondo);
-        graficarSudoku(window, 20, 20, 50, 5, sf::Color(105, 105, 105), sf::Color(169, 169, 169), sf::Color(240, 248, 255));
+        sudoku.graficarSudoku(window, text, 20, 20, 50, 6, sf::Color(105, 105, 105), sf::Color(169, 169, 169), sf::Color(240, 248, 255));
         window.display();
     }
 }
