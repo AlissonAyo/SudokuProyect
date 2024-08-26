@@ -1,0 +1,153 @@
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include <array>
+#include <iostream>
+
+const int tamanoCuadricula = 9;
+const int tamanoCelda = 50;
+const int desplazamientoX = 100;
+const int desplazamientoY = 100;
+
+std::array<std::array<int, tamanoCuadricula>, tamanoCuadricula> cuadricula = {
+    std::array<int, tamanoCuadricula>{5, 3, 0, 0, 7, 0, 0, 0, 0},
+    std::array<int, tamanoCuadricula>{6, 0, 0, 1, 9, 5, 0, 0, 0},
+    std::array<int, tamanoCuadricula>{0, 9, 8, 0, 0, 0, 0, 6, 0},
+    std::array<int, tamanoCuadricula>{8, 0, 0, 0, 6, 0, 0, 0, 3},
+    std::array<int, tamanoCuadricula>{4, 0, 0, 8, 0, 3, 0, 0, 1},
+    std::array<int, tamanoCuadricula>{7, 0, 0, 0, 2, 0, 0, 0, 6},
+    std::array<int, tamanoCuadricula>{0, 6, 0, 0, 0, 0, 2, 8, 0},
+    std::array<int, tamanoCuadricula>{0, 0, 0, 4, 1, 9, 0, 0, 5},
+    std::array<int, tamanoCuadricula>{0, 0, 0, 0, 8, 0, 0, 7, 9}
+};
+
+// Función para verificar si un número puede colocarse en una celda
+bool esValido(int fila, int columna, int numero) {
+    for (int i = 0; i < tamanoCuadricula; ++i) {
+        if (cuadricula[fila][i] == numero || cuadricula[i][columna] == numero) {
+            return false;
+        }
+    }
+
+    int inicioFila = (fila / 3) * 3;
+    int inicioColumna = (columna / 3) * 3;
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (cuadricula[inicioFila + i][inicioColumna + j] == numero) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// Backtracking
+bool resolverSudoku(int fila, int columna) {
+    if (fila == tamanoCuadricula) {
+        return true;
+    }
+
+    if (columna == tamanoCuadricula) {
+        return resolverSudoku(fila + 1, 0);
+    }
+
+    if (cuadricula[fila][columna] != 0) {
+        return resolverSudoku(fila, columna + 1);
+    }
+
+    for (int numero = 1; numero <= 9; ++numero) {
+        if (esValido(fila, columna, numero)) {
+            cuadricula[fila][columna] = numero;
+
+            if (resolverSudoku(fila, columna + 1)) {
+                return true;
+            }
+
+            cuadricula[fila][columna] = 0;
+        }
+    }
+
+    return false;
+}
+
+void dibujarCuadricula(sf::RenderWindow &ventana, sf::Font &fuente) {
+    for (int i = 0; i <= tamanoCuadricula; ++i) {
+        float grosorLinea = (i % 3 == 0) ? 3.0f : 1.0f;
+        sf::Color colorLinea = sf::Color::Black;
+
+        // Líneas horizontales
+        sf::RectangleShape linea(sf::Vector2f(tamanoCuadricula * tamanoCelda, grosorLinea));
+        linea.setFillColor(colorLinea);
+        linea.setPosition(desplazamientoX, desplazamientoY + i * tamanoCelda - (grosorLinea / 2));
+        ventana.draw(linea);
+
+        // Líneas verticales
+        sf::RectangleShape linea2(sf::Vector2f(grosorLinea, tamanoCuadricula * tamanoCelda));
+        linea2.setFillColor(colorLinea);
+        linea2.setPosition(desplazamientoX + i * tamanoCelda - (grosorLinea / 2), desplazamientoY);
+        ventana.draw(linea2);
+    }
+
+    // Dibujar los números en la cuadrícula
+    for (int fila = 0; fila < tamanoCuadricula; ++fila) {
+        for (int columna = 0; columna < tamanoCuadricula; ++columna) {
+            if (cuadricula[fila][columna] != 0) {
+                sf::Text numero(std::to_string(cuadricula[fila][columna]), fuente, 30);
+                numero.setFillColor(sf::Color::Black);
+                numero.setPosition(desplazamientoX + columna * tamanoCelda + 15, desplazamientoY + fila * tamanoCelda + 5);
+                ventana.draw(numero);
+            }
+        }
+    }
+}
+
+void ventana_Juego() {
+    sf::RenderWindow ventana_Juego(sf::VideoMode(800, 600), "Sudoku - Juega y Resuelve");
+
+    sf::Font fuente;
+    if (!fuente.loadFromFile("Tipo_Letra1.ttf")) {
+        return;
+    }
+
+    sf::Text titulo("SUDOKU", fuente, 50);
+    titulo.setFillColor(sf::Color(221, 36, 121));
+    titulo.setPosition(100, 20);
+    titulo.setLetterSpacing(1.5f);
+
+    sf::RectangleShape botonResolver(sf::Vector2f(150, 50));
+    botonResolver.setFillColor(sf::Color(173, 216, 230));
+    botonResolver.setPosition(550, 50);
+
+    sf::Text textoResolver("Resolver", fuente, 20);
+    textoResolver.setFillColor(sf::Color::Black);
+    textoResolver.setPosition(565, 60);
+
+    while (ventana_Juego.isOpen()) {
+        sf::Event evento;
+        while (ventana_Juego.pollEvent(evento)) {
+            if (evento.type == sf::Event::Closed) {
+                ventana_Juego.close();
+            }
+
+            if (evento.type == sf::Event::MouseButtonPressed) {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(ventana_Juego);
+                if (botonResolver.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos))) {
+                    resolverSudoku(0, 0);
+                }
+            }
+        }
+
+        ventana_Juego.clear(sf::Color(250, 235, 215));
+        ventana_Juego.draw(titulo);
+        dibujarCuadricula(ventana_Juego, fuente);
+        ventana_Juego.draw(botonResolver);
+        ventana_Juego.draw(textoResolver);
+        ventana_Juego.display();
+    }
+}
+
+int main() {
+    ventana_Juego();
+    return 0;
+}
