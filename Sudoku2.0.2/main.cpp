@@ -940,15 +940,42 @@ int modoDificil() {
 }
 
 int modoAutomatico() {
-    RenderWindow automatico(VideoMode(960, 720), "Automï¿½tico");
+    RenderWindow automatico(VideoMode(960, 720), "Automático");
     RectangleShape fondoAutomatico(Vector2f(960, 720));
     Texture texturaAutomatico;
     Sudoku sudokuAutomatico;
 
+    Text floatingText;
+    floatingText.setFont(sudokuAutomatico.font);
+    floatingText.setCharacterSize(20);
+    floatingText.setFillColor(Color::White);
+    floatingText.setPosition(100, 100);
+
+    bool menuAbierto = false;
+    RectangleShape fondoMenuPausa(Vector2f(300, 200));
+    fondoMenuPausa.setFillColor(Color(100, 100, 100, 200));
+    fondoMenuPausa.setPosition(330, 260);
+
+    std::vector<Text> opcionesMenu;
+    std::vector<std::string> textosOpciones = {"Volver a la partida", "Reiniciar", "Menu Principal"};
+    for (int i = 0; i < 3; ++i) {
+        Text opcion;
+        opcion.setFont(sudokuAutomatico.font);
+        opcion.setString(textosOpciones[i]);
+        opcion.setCharacterSize(20);
+        opcion.setFillColor(Color::White);
+        opcion.setPosition(350, 280 + i * 50);
+        opcionesMenu.push_back(opcion);
+    }
+
+    Clock clock;
+    float tiempoMensaje = 2;
+    bool mensajeVisible = true;
+
     int fila = 0;
     int columna = 0;
     int valor = 0;
-    int resoluble = false;
+    int resoluble = true;
 
     RectangleShape seleccion(Vector2f(38, 38));
     seleccion.setFillColor(Color::Transparent);
@@ -957,13 +984,15 @@ int modoAutomatico() {
 
     if (!texturaAutomatico.loadFromFile("Fondos/fondoautomatico.png"))
     {
-        std::cerr << "No se pudo cargar la textura del fondo del modo automï¿½tico" << std::endl;
+        std::cerr << "No se pudo cargar la textura del fondo del modo automático" << std::endl;
         return -1;
     }
     fondoAutomatico.setTexture(&texturaAutomatico);
 
     while (automatico.isOpen()) {
+        Time tiempo = clock.getElapsedTime();
         Event evento;
+        if (tiempo.asSeconds() > tiempoMensaje) mensajeVisible = false;
         while (automatico.pollEvent(evento)) {
             if (evento.type == Event::Closed) {
                 automatico.close();
@@ -984,11 +1013,23 @@ int modoAutomatico() {
 
                     if (esValido(sudokuAutomatico.tablero, fila, columna, valor)) {
                         sudokuAutomatico.tablero[fila][columna] = valor;
+                    } else {
+                        floatingText.setString("Numero repetido!");
+                        mensajeVisible = true;
+                        clock.restart();
                     }
                 }
 
                 if (evento.key.code == Keyboard::Key::Enter) {
-                    llenar(0, 0, sudokuAutomatico);
+                    if(!llenar(0, 0, sudokuAutomatico)) {
+                        floatingText.setString("No se puede resolver este sudoku!");
+                        mensajeVisible = true;
+                        clock.restart();
+                    } else {
+                        floatingText.setString("Sudoku resuelto! Muy facil!");
+                        mensajeVisible = true;
+                        clock.restart();
+                    }
                 }
 
                 if (evento.key.code == Keyboard::Num0) {
@@ -1003,9 +1044,12 @@ int modoAutomatico() {
         );
 
         automatico.clear();
+
+        if (mensajeVisible) automatico.draw(floatingText);
         automatico.draw(fondoAutomatico);
         sudokuAutomatico.dibujar(automatico);  // Dibujar la cuadrï¿½cula de Sudoku
         automatico.draw(seleccion);
+
         automatico.display();
     }
 
