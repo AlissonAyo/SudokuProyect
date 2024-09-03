@@ -1043,16 +1043,16 @@ int modoAutomatico()
     floatingText.setFillColor(Color::White);
     floatingText.setPosition(100, 100);
 
-    RectangleShape botonMenu(Vector2f(100, 50));
-    botonMenu.setFillColor(Color::Blue);
-    botonMenu.setPosition(850, 10);
+    RectangleShape botonMenu(Vector2f(120, 50));
+    botonMenu.setFillColor(Color::Transparent);
+    botonMenu.setPosition(830, 10);
 
     Text textoBotonMenu;
     textoBotonMenu.setFont(sudokuAutomatico.font);
-    textoBotonMenu.setString("Menu");
+    textoBotonMenu.setString("Pausar");
     textoBotonMenu.setCharacterSize(20);
     textoBotonMenu.setFillColor(Color::White);
-    textoBotonMenu.setPosition(870, 20);
+    textoBotonMenu.setPosition(840, 20);
 
     bool menuAbierto = false;
     RectangleShape fondoMenuPausa(Vector2f(300, 200));
@@ -1060,7 +1060,7 @@ int modoAutomatico()
     fondoMenuPausa.setPosition(330, 260);
 
     std::vector<Text> opcionesMenu;
-    std::vector<std::string> textosOpciones = {"Volver a la partida", "Reiniciar", "Menu Principal"};
+    std::vector<std::string> textosOpciones = {"Renaudar", "Reiniciar", "Menu Principal"};
     for (int i = 0; i < 3; ++i)
     {
         Text opcion;
@@ -1073,13 +1073,12 @@ int modoAutomatico()
     }
 
     Clock clock;
-    float tiempoMensaje = 1;
+    float tiempoMensaje = 2;
     bool mensajeVisible = true;
 
     int fila = 0;
     int columna = 0;
     int valor = 0;
-    int resoluble = true;
 
     RectangleShape seleccion(Vector2f(38, 38));
     seleccion.setFillColor(Color::Transparent);
@@ -1097,73 +1096,27 @@ int modoAutomatico()
     {
         Time tiempo = clock.getElapsedTime();
         Event evento;
-        if (tiempo.asSeconds() > tiempoMensaje) mensajeVisible = false;
+        if (tiempo.asSeconds() > tiempoMensaje && evento.key.code) mensajeVisible = false;
         while (automatico.pollEvent(evento))
         {
             if (evento.type == Event::Closed)
             {
                 automatico.close();
             }
-            if (evento.type == Event::KeyPressed)
+
+            if (evento.type == Event::MouseButtonPressed)
             {
-                if (evento.key.code == Keyboard::Up && fila > 0)
+                if (evento.mouseButton.button == Mouse::Left)
                 {
-                    fila--;
-                }
-                else if (evento.key.code == Keyboard::Down && fila < 8)
-                {
-                    fila++;
-                }
-                else if (evento.key.code == Keyboard::Left && columna > 0)
-                {
-                    columna--;
-                }
-                else if (evento.key.code == Keyboard::Right && columna < 8)
-                {
-                    columna++;
-                }
-
-                if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9)
-                {
-                    valor = evento.key.code - Keyboard::Num0;
-
-                    if (sudokuAutomatico.esValido(fila, columna, valor))
-                    {
-                        sudokuAutomatico.tablero[fila][columna] = valor;
-                    }
-                    else
-                    {
-                        floatingText.setString("Numero repetido!");
-                        mensajeVisible = true;
-                        clock.restart();
-                    }
-                }
-
-                if (evento.key.code == Keyboard::Key::Enter)
-                {
-                    if(!sudokuAutomatico.llenar(0, 0))
-                    {
-                        floatingText.setString("No se puede resolver este sudoku!");
-                        mensajeVisible = true;
-                        clock.restart();
-                    }
-                    else
-                    {
-                        floatingText.setString("Sudoku resuelto! Muy facil!");
-                        mensajeVisible = true;
-                        clock.restart();
-                    }
-                }
-
-                if (evento.key.code == Keyboard::Num0)
-                {
-                    sudokuAutomatico.tablero[fila][columna] = 0;
-                }
-            }
-
-            if (evento.type == Event::MouseButtonPressed) {
-                if (evento.mouseButton.button == Mouse::Left) {
                     Vector2i mousePos = Mouse::getPosition(automatico);
+
+                    if (mousePos.x >= sudokuAutomatico.offsetX && mousePos.x < sudokuAutomatico.offsetX + 9 * 40 &&
+                        mousePos.y >= sudokuAutomatico.offsetY && mousePos.y < sudokuAutomatico.offsetY + 9 * 40 && !menuAbierto)
+                    {
+                        columna = (mousePos.x - sudokuAutomatico.offsetX) / 40;
+                        fila = (mousePos.y - sudokuAutomatico.offsetY) / 40;
+                    }
+
                     if (botonMenu.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
                         menuAbierto = !menuAbierto;
                     }
@@ -1176,6 +1129,7 @@ int modoAutomatico()
                                     for (int i = 0; i < 9; i++)
                                         for (int j = 0; j < 9; j++)
                                             sudokuAutomatico.tablero[i][j] = 0;
+                                    mensajeVisible = false;
                                     menuAbierto = false;
                                 } else if (i == 2) { // Menú principal
                                     return 0;
@@ -1185,19 +1139,73 @@ int modoAutomatico()
                     }
                 }
             }
+
+            if (evento.type == Event::KeyPressed && !menuAbierto)
+            {
+                if (evento.key.code == Keyboard::Up && fila > 0) fila--;
+                else if (evento.key.code == Keyboard::Down && fila < 8) fila++;
+                else if (evento.key.code == Keyboard::Left && columna > 0) columna--;
+                else if (evento.key.code == Keyboard::Right && columna < 8) columna++;
+
+                if (fila != -1 && columna != -1)
+                {
+                    if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9)
+                    {
+                        mensajeVisible = false;
+                        valor = evento.key.code - Keyboard::Num0;
+
+                        if (sudokuAutomatico.esValido(fila, columna, valor))
+                            sudokuAutomatico.tablero[fila][columna] = valor;
+                        else
+                        {
+                            floatingText.setString("Numero repetido!");
+                            mensajeVisible = true;
+                            clock.restart();
+                            tiempoMensaje = 1.5;
+                        }
+                    }
+
+                    if (evento.key.code == Keyboard::Key::Enter)
+                    {
+                        if(!sudokuAutomatico.llenar(0, 0))
+                        {
+                            floatingText.setString("No se puede resolver este sudoku!");
+                            mensajeVisible = true;
+                            clock.restart();
+                            tiempoMensaje = 1000;
+                        }
+                        else
+                        {
+                            floatingText.setString("Sudoku resuelto! Muy facil!");
+                            mensajeVisible = true;
+                            clock.restart();
+                            tiempoMensaje = 1000;
+                        }
+                    }
+
+                    if (evento.key.code == Keyboard::Num0)
+                    {
+                        mensajeVisible = false;
+                        sudokuAutomatico.tablero[fila][columna] = 0;
+                    }
+                }
+            }
         }
 
-        seleccion.setPosition(
-            sudokuAutomatico.offsetX + columna * 40 + 1,
-            sudokuAutomatico.offsetY + fila * 40 + 1
-        );
+        if (fila != -1 && columna != -1)
+        {
+            seleccion.setPosition(
+                sudokuAutomatico.offsetX + columna * 40 + 1,
+                sudokuAutomatico.offsetY + fila * 40 + 1
+            );
+        }
 
         automatico.clear();
 
         if (mensajeVisible) automatico.draw(floatingText);
         automatico.draw(fondoAutomatico);
         sudokuAutomatico.dibujar(automatico);  // Dibujar la cuadricula de Sudoku
-        automatico.draw(seleccion);
+        if (fila != -1 && columna != -1) automatico.draw(seleccion);
         automatico.draw(botonMenu);
         automatico.draw(textoBotonMenu);
 
@@ -1209,7 +1217,6 @@ int modoAutomatico()
         }
 
         automatico.display();
-
     }
 
     return 0;
