@@ -3,7 +3,11 @@
 
 Sudoku::Sudoku() : offsetX(0), offsetY(0)
 {
+<<<<<<< HEAD
     // Inicializa el tablero con ceros (vacï¿½o)
+=======
+    // Inicializa el tablero con ceros (vacío)
+>>>>>>> 7b6262c8eaef84adae9769c424260a4a6dad6f68
     for (int i = 0; i < 9; ++i)
         for (int j = 0; j < 9; ++j)
             tablero[i][j] = 0;
@@ -263,3 +267,7 @@ void Sudoku::marcarCeldasFijas() {
         }
     }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7b6262c8eaef84adae9769c424260a4a6dad6f68
