@@ -21,13 +21,13 @@ int modoFacil()
 
     if (!texturaFacil.loadFromFile("Fondos/fondofacil.png"))
     {
-        std::cerr << "No se pudo cargar la textura del fondo del modo f�cil" << std::endl;
+        std::cerr << "No se pudo cargar la textura del fondo del modo facil" << std::endl;
         return -1;
     }
     fondoFacil.setTexture(&texturaFacil);
 
     sudokuFacil.generarSudokuCompleto();
-    sudokuFacil.eliminarNumeros(30);  // 30 celdas vac�as para el modo f�cil
+    sudokuFacil.eliminarNumeros(30);  // 30 celdas vacías para el modo fácil
     sudokuFacil.marcarCeldasFijas();
 
     int filaSeleccionada = 0;
@@ -38,7 +38,6 @@ int modoFacil()
     seleccion.setOutlineThickness(2);
     seleccion.setOutlineColor(Color::Yellow);
 
-    // Vector para almacenar el color original de las celdas
     std::vector<std::vector<Color>> coloresOriginales(9, std::vector<Color>(9, Color::White));
 
     RenderWindow ventanaFlotante(VideoMode(300, 100), "Mensaje", Style::None);
@@ -75,26 +74,26 @@ int modoFacil()
 
     Text textoBotonMenu;
     textoBotonMenu.setFont(sudokuFacil.font);
-    textoBotonMenu.setString("Menu");
+    textoBotonMenu.setString("Pausa");
     textoBotonMenu.setCharacterSize(20);
     textoBotonMenu.setFillColor(Color::White);
     textoBotonMenu.setPosition(870, 20);
 
     bool menuAbierto = false;
-    RectangleShape fondoMenuPausa(Vector2f(300, 200));
+    RectangleShape fondoMenuPausa(Vector2f(400, 300));
     fondoMenuPausa.setFillColor(Color(100, 100, 100, 200));
-    fondoMenuPausa.setPosition(330, 260);
+    fondoMenuPausa.setPosition(280, 210);
 
     std::vector<Text> opcionesMenu;
-    std::vector<std::string> textosOpciones = {"Volver a la partida", "Regresar al Menu Principal", "Salir del Juego"};
-    for (int i = 0; i < 3; ++i)
+    std::vector<std::string> textosOpciones = {"Volver a la partida", "Menu Principal", "Salir del Juego"};
+    for (int i = 0; i < 3; i++)
     {
         Text opcion;
         opcion.setFont(sudokuFacil.font);
         opcion.setString(textosOpciones[i]);
-        opcion.setCharacterSize(20);
+        opcion.setCharacterSize(24);
         opcion.setFillColor(Color::White);
-        opcion.setPosition(350, 280 + i * 50);
+        opcion.setPosition(480, 260 + i * 70); // Posición temporal, se ajustará más adelante
         opcionesMenu.push_back(opcion);
     }
 
@@ -132,7 +131,6 @@ int modoFacil()
                 {
                     int valorIngresado = evento.key.code - Keyboard::Num0;
 
-                    // Solo permite modificar celdas que no son fijas
                     if (!esCeldaFija[filaSeleccionada][columnaSeleccionada] &&
                             sudokuFacil.esValido(filaSeleccionada, columnaSeleccionada, valorIngresado))
                     {
@@ -147,7 +145,7 @@ int modoFacil()
                                 {
                                     int fila = filaSeleccionada - filaSeleccionada % 3 + i;
                                     int columna = columnaSeleccionada - columnaSeleccionada % 3 + j;
-                                    sudokuFacil.grid[fila][columna].setFillColor(Color::Green);  // Cambia el color a verde
+                                    sudokuFacil.grid[fila][columna].setFillColor(Color::Green);
                                 }
                             }
                         }
@@ -155,7 +153,7 @@ int modoFacil()
                     else
                     {
                         if (!esCeldaFija[filaSeleccionada][columnaSeleccionada]){
-                            mensajeTexto.setString("Valor no valido o casilla fija.");
+                            mensajeTexto.setString("Numero Invalido");
                             vidas--;
                             vidasText.setString("Vidas: " + std::to_string(vidas));
                             sudokuFacil.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
@@ -163,7 +161,7 @@ int modoFacil()
                         }
                         if (vidas <= 0)
                         {
-                            mensajeTexto.setString("Game Over");
+                            mensajeTexto.setString("GAME OVER");
                             mostrarVentanaFlotante = true;
                             tiempoMostrarVentana = 0;
                             juegoTerminado = true;
@@ -207,7 +205,7 @@ int modoFacil()
                                 }
                                 else if (i == 1)     // Regresar al Menu Principal
                                 {
-                                    return 0; // Volver al men� principal
+                                    return 0; // Volver al menú principal
                                 }
                                 else if (i == 2)     // Salir del Juego
                                 {
@@ -219,7 +217,6 @@ int modoFacil()
                     }
                     else
                     {
-                        // Restaurar el color original de la celda previamente resaltada
                         for (int i = 0; i < 9; i++)
                         {
                             for (int j = 0; j < 9; j++)
@@ -231,22 +228,18 @@ int modoFacil()
                             }
                         }
 
-                        // Calcular la fila y columna seleccionadas en funci�n de la posici�n del mouse
                         columnaSeleccionada = (mousePos.x - sudokuFacil.offsetX) / 40;
                         filaSeleccionada = (mousePos.y - sudokuFacil.offsetY) / 40;
 
-                        // Asegurarse de que la selecci�n est� dentro del tablero
                         if (filaSeleccionada >= 0 && filaSeleccionada < 9 &&
                                 columnaSeleccionada >= 0 && columnaSeleccionada < 9)
                         {
-                            // Guardar el color original de la nueva celda seleccionada
                             coloresOriginales[filaSeleccionada][columnaSeleccionada] = sudokuFacil.grid[filaSeleccionada][columnaSeleccionada].getFillColor();
 
-                            // Resaltar la fila, columna y bloque 3x3 de la celda seleccionada
                             for (int i = 0; i < 9; ++i)
                             {
-                                sudokuFacil.grid[filaSeleccionada][i].setFillColor(Color(200, 200, 250)); // Resaltar fila
-                                sudokuFacil.grid[i][columnaSeleccionada].setFillColor(Color(200, 200, 250)); // Resaltar columna
+                                sudokuFacil.grid[filaSeleccionada][i].setFillColor(Color(200, 200, 250));
+                                sudokuFacil.grid[i][columnaSeleccionada].setFillColor(Color(200, 200, 250));
                             }
 
                             int inicioFila = filaSeleccionada - filaSeleccionada % 3;
@@ -255,7 +248,7 @@ int modoFacil()
                             {
                                 for (int j = inicioColumna; j < inicioColumna + 3; ++j)
                                 {
-                                    sudokuFacil.grid[i][j].setFillColor(Color(200, 200, 250)); // Resaltar bloque 3x3
+                                    sudokuFacil.grid[i][j].setFillColor(Color(200, 200, 250));
                                 }
                             }
                         }
@@ -302,8 +295,23 @@ int modoFacil()
         if (menuAbierto)
         {
             facil.draw(fondoMenuPausa);
-            for (const auto& opcion : opcionesMenu)
+               for (auto& opcion : opcionesMenu)
             {
+                // Center align each option
+                FloatRect textRect = opcion.getLocalBounds();
+                opcion.setOrigin(textRect.left + textRect.width/2.0f, textRect.top + textRect.height/2.0f);
+                opcion.setPosition(Vector2f(480, opcion.getPosition().y));
+
+                // Highlight on hover
+                if (opcion.getGlobalBounds().contains(Mouse::getPosition(facil).x, Mouse::getPosition(facil).y))
+                {
+                    opcion.setFillColor(Color::Yellow);
+                }
+                else
+                {
+                    opcion.setFillColor(Color::White);
+                }
+
                 facil.draw(opcion);
             }
         }
@@ -334,6 +342,7 @@ int modoFacil()
 
         if (juegoTerminado)
         {
+
             sf::sleep(sf::seconds(2));
             return 0;
         }
@@ -357,7 +366,7 @@ int modoMedio()
     fondoMedio.setTexture(&texturaMedio);
 
     sudokuMedio.generarSudokuCompleto();
-    sudokuMedio.eliminarNumeros(40);  // 40 celdas vac�as para el modo medio
+    sudokuMedio.eliminarNumeros(40);  // 40 celdas vacías para el modo medio
     sudokuMedio.marcarCeldasFijas();
 
     int filaSeleccionada = 0;
@@ -368,7 +377,6 @@ int modoMedio()
     seleccion.setOutlineThickness(2);
     seleccion.setOutlineColor(Color::Yellow);
 
-    // Vector para almacenar el color original de las celdas
     std::vector<std::vector<Color>> coloresOriginales(9, std::vector<Color>(9, Color::White));
 
     RenderWindow ventanaFlotante(VideoMode(300, 100), "Mensaje", Style::None);
@@ -399,32 +407,32 @@ int modoMedio()
     vidasText.setPosition(10, 680);
     vidasText.setString("Vidas: " + std::to_string(vidas));
 
-    RectangleShape botonMenu(Vector2f(100, 50));
+    RectangleShape botonMenu(Vector2f(120, 50));
     botonMenu.setFillColor(Color::Blue);
-    botonMenu.setPosition(850, 10);
+    botonMenu.setPosition(420 ,10);
 
     Text textoBotonMenu;
     textoBotonMenu.setFont(sudokuMedio.font);
-    textoBotonMenu.setString("Menu");
+    textoBotonMenu.setString("Pausa");
     textoBotonMenu.setCharacterSize(20);
     textoBotonMenu.setFillColor(Color::White);
-    textoBotonMenu.setPosition(870, 20);
+    textoBotonMenu.setPosition(455, 20);
 
     bool menuAbierto = false;
-    RectangleShape fondoMenuPausa(Vector2f(300, 200));
+    RectangleShape fondoMenuPausa(Vector2f(400, 300));
     fondoMenuPausa.setFillColor(Color(100, 100, 100, 200));
-    fondoMenuPausa.setPosition(330, 260);
+    fondoMenuPausa.setPosition(280, 210);
 
     std::vector<Text> opcionesMenu;
-    std::vector<std::string> textosOpciones = {"Volver a la partida", "Regresar al Menu Principal", "Salir del Juego"};
+    std::vector<std::string> textosOpciones = {"Volver a la partida", "Menu Principal", "Salir del Juego"};
     for (int i = 0; i < 3; ++i)
     {
         Text opcion;
         opcion.setFont(sudokuMedio.font);
         opcion.setString(textosOpciones[i]);
-        opcion.setCharacterSize(20);
+        opcion.setCharacterSize(24);
         opcion.setFillColor(Color::White);
-        opcion.setPosition(350, 280 + i * 50);
+        opcion.setPosition(0, 0); // Posición temporal, se ajustará más adelante
         opcionesMenu.push_back(opcion);
     }
 
@@ -462,7 +470,6 @@ int modoMedio()
                 {
                     int valorIngresado = evento.key.code - Keyboard::Num0;
 
-                    // Solo permite modificar celdas que no son fijas
                     if (!esCeldaFija[filaSeleccionada][columnaSeleccionada] &&
                             sudokuMedio.esValido(filaSeleccionada, columnaSeleccionada, valorIngresado))
                     {
@@ -477,7 +484,7 @@ int modoMedio()
                                 {
                                     int fila = filaSeleccionada - filaSeleccionada % 3 + i;
                                     int columna = columnaSeleccionada - columnaSeleccionada % 3 + j;
-                                    sudokuMedio.grid[fila][columna].setFillColor(Color::Green);  // Cambia el color a verde
+                                    sudokuMedio.grid[fila][columna].setFillColor(Color::Green);
                                 }
                             }
                         }
@@ -485,7 +492,7 @@ int modoMedio()
                     else
                     {
                         if (!esCeldaFija[filaSeleccionada][columnaSeleccionada]){
-                            mensajeTexto.setString("Valor no valido o casilla fija.");
+                            mensajeTexto.setString("Numero Invalido");
                             vidas--;
                             vidasText.setString("Vidas: " + std::to_string(vidas));
                             sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
@@ -493,7 +500,7 @@ int modoMedio()
                         }
                         if (vidas <= 0)
                         {
-                            mensajeTexto.setString("Game Over");
+                            mensajeTexto.setString("GAME OVER");
                             mostrarVentanaFlotante = true;
                             tiempoMostrarVentana = 0;
                             juegoTerminado = true;
@@ -537,7 +544,7 @@ int modoMedio()
                                 }
                                 else if (i == 1)     // Regresar al Menu Principal
                                 {
-                                    return 0; // Volver al men� principal
+                                    return 0; // Volver al menú principal
                                 }
                                 else if (i == 2)     // Salir del Juego
                                 {
@@ -549,7 +556,6 @@ int modoMedio()
                     }
                     else
                     {
-                        // Restaurar el color original de la celda previamente resaltada
                         for (int i = 0; i < 9; i++)
                         {
                             for (int j = 0; j < 9; j++)
@@ -561,22 +567,18 @@ int modoMedio()
                             }
                         }
 
-                        // Calcular la fila y columna seleccionadas en funci�n de la posici�n del mouse
                         columnaSeleccionada = (mousePos.x - sudokuMedio.offsetX) / 40;
                         filaSeleccionada = (mousePos.y - sudokuMedio.offsetY) / 40;
 
-                        // Asegurarse de que la selecci�n est� dentro del tablero
                         if (filaSeleccionada >= 0 && filaSeleccionada < 9 &&
                                 columnaSeleccionada >= 0 && columnaSeleccionada < 9)
                         {
-                            // Guardar el color original de la nueva celda seleccionada
                             coloresOriginales[filaSeleccionada][columnaSeleccionada] = sudokuMedio.grid[filaSeleccionada][columnaSeleccionada].getFillColor();
 
-                            // Resaltar la fila, columna y bloque 3x3 de la celda seleccionada
                             for (int i = 0; i < 9; ++i)
                             {
-                                sudokuMedio.grid[filaSeleccionada][i].setFillColor(Color(200, 200, 250)); // Resaltar fila
-                                sudokuMedio.grid[i][columnaSeleccionada].setFillColor(Color(200, 200, 250)); // Resaltar columna
+                                sudokuMedio.grid[filaSeleccionada][i].setFillColor(Color(200, 200, 250));
+                                sudokuMedio.grid[i][columnaSeleccionada].setFillColor(Color(200, 200, 250));
                             }
 
                             int inicioFila = filaSeleccionada - filaSeleccionada % 3;
@@ -585,7 +587,7 @@ int modoMedio()
                             {
                                 for (int j = inicioColumna; j < inicioColumna + 3; ++j)
                                 {
-                                    sudokuMedio.grid[i][j].setFillColor(Color(200, 200, 250)); // Resaltar bloque 3x3
+                                    sudokuMedio.grid[i][j].setFillColor(Color(200, 200, 250));
                                 }
                             }
                         }
@@ -629,14 +631,35 @@ int modoMedio()
         medio.draw(botonMenu);
         medio.draw(textoBotonMenu);
 
-        if (menuAbierto)
+       if (menuAbierto)
+    {
+        medio.draw(fondoMenuPausa);
+        for (int i = 0; i < opcionesMenu.size(); ++i)
         {
-            medio.draw(fondoMenuPausa);
-            for (const auto& opcion : opcionesMenu)
+            float xPos = fondoMenuPausa.getPosition().x + (fondoMenuPausa.getSize().x - opcionesMenu[i].getLocalBounds().width) / 2;
+            float yPos = fondoMenuPausa.getPosition().y + 50 + i * 80;  // Increased vertical spacing
+            opcionesMenu[i].setPosition(xPos, yPos);
+
+            // Create a background rectangle for each option
+            RectangleShape optionBackground(Vector2f(300, 50));
+            optionBackground.setPosition(xPos - 10, yPos - 10);
+            optionBackground.setFillColor(Color(150, 150, 150, 200));
+
+            if (optionBackground.getGlobalBounds().contains(Mouse::getPosition(medio).x, Mouse::getPosition(medio).y))
             {
-                medio.draw(opcion);
+                opcionesMenu[i].setFillColor(Color::Yellow);
+                optionBackground.setFillColor(Color(200, 200, 200, 200));
             }
+            else
+            {
+                opcionesMenu[i].setFillColor(Color::White);
+            }
+
+            medio.draw(optionBackground);
+            medio.draw(opcionesMenu[i]);
         }
+    }
+
 
         if (mostrarVentanaFlotante)
         {
@@ -665,7 +688,7 @@ int modoMedio()
         if (juegoTerminado)
         {
             sf::sleep(sf::seconds(2));
-            return 0; // Volver al men� principal despu�s de 2 segundos
+            return 0; // Volver al menú principal después de 2 segundos
         }
     }
 
@@ -681,13 +704,13 @@ int modoDificil()
 
     if (!texturaDificil.loadFromFile("Fondos/fondodificil.png"))
     {
-        std::cerr << "No se pudo cargar la textura del fondo del modo dif�cil" << std::endl;
+        std::cerr << "No se pudo cargar la textura del fondo del modo difícil" << std::endl;
         return -1;
     }
     fondoDificil.setTexture(&texturaDificil);
 
     sudokuDificil.generarSudokuCompleto();
-    sudokuDificil.eliminarNumeros(45);  // 45 celdas vac�as para el modo dif�cil
+    sudokuDificil.eliminarNumeros(45);  // 45 celdas vacías para el modo difícil
     sudokuDificil.marcarCeldasFijas();
 
     int filaSeleccionada = 0;
@@ -741,20 +764,20 @@ int modoDificil()
     textoBotonMenu.setPosition(870, 20);
 
     bool menuAbierto = false;
-    RectangleShape fondoMenuPausa(Vector2f(300, 200));
+    RectangleShape fondoMenuPausa(Vector2f(400, 300));  // Increased size for better visibility
     fondoMenuPausa.setFillColor(Color(100, 100, 100, 200));
-    fondoMenuPausa.setPosition(330, 260);
+    fondoMenuPausa.setPosition(280, 210);  // Adjusted position to center it
 
     std::vector<Text> opcionesMenu;
-    std::vector<std::string> textosOpciones = {"Volver a la partida", "Regresar al Menu Principal", "Salir del Juego"};
+    std::vector<std::string> textosOpciones = {"Volver a la partida", "Menu Principal", "Salir del Juego"};
     for (int i = 0; i < 3; ++i)
     {
         Text opcion;
         opcion.setFont(sudokuDificil.font);
         opcion.setString(textosOpciones[i]);
-        opcion.setCharacterSize(20);
+        opcion.setCharacterSize(24);  // Increased font size
         opcion.setFillColor(Color::White);
-        opcion.setPosition(350, 280 + i * 50);
+        opcion.setPosition(480, 260 + i * 70);  // Adjusted positioning
         opcionesMenu.push_back(opcion);
     }
 
@@ -816,7 +839,7 @@ int modoDificil()
                     else
                     {
                         if (!esCeldaFija[filaSeleccionada][columnaSeleccionada]){
-                            mensajeTexto.setString("Valor no valido o casilla fija.");
+                            mensajeTexto.setString("Valor Invalido.");
                             vidas--;
                             vidasText.setString("Vidas: " + std::to_string(vidas));
                             sudokuDificil.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
@@ -824,7 +847,7 @@ int modoDificil()
                         }
                         if (vidas <= 0)
                         {
-                            mensajeTexto.setString("Game Over");
+                            mensajeTexto.setString("GAME OVER");
                             mostrarVentanaFlotante = true;
                             tiempoMostrarVentana = 0;
                             juegoTerminado = true;
@@ -868,7 +891,7 @@ int modoDificil()
                                 }
                                 else if (i == 1)     // Regresar al Menu Principal
                                 {
-                                    return 0; // Volver al men� principal
+                                    return 0; // Volver al menú principal
                                 }
                                 else if (i == 2)     // Salir del Juego
                                 {
@@ -892,11 +915,11 @@ int modoDificil()
                             }
                         }
 
-                        // Calcular la fila y columna seleccionadas en funci�n de la posici�n del mouse
+                        // Calcular la fila y columna seleccionadas en función de la posición del mouse
                         columnaSeleccionada = (mousePos.x - sudokuDificil.offsetX) / 40;
                         filaSeleccionada = (mousePos.y - sudokuDificil.offsetY) / 40;
 
-                        // Asegurarse de que la selecci�n est� dentro del tablero
+                        // Asegurarse de que la selección está dentro del tablero
                         if (filaSeleccionada >= 0 && filaSeleccionada < 9 &&
                             columnaSeleccionada >= 0 && columnaSeleccionada < 9)
                         {
@@ -963,8 +986,12 @@ int modoDificil()
         if (menuAbierto)
         {
             dificil.draw(fondoMenuPausa);
-            for (const auto& opcion : opcionesMenu)
+            for (auto& opcion : opcionesMenu)
             {
+                // Center align each option
+                FloatRect textRect = opcion.getLocalBounds();
+                opcion.setOrigin(textRect.left + textRect.width/2.0f, textRect.top + textRect.height/2.0f);
+                opcion.setPosition(Vector2f(480, opcion.getPosition().y));
                 dificil.draw(opcion);
             }
         }
