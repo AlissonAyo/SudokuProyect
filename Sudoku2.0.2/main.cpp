@@ -41,12 +41,21 @@ bool llenar(int i, int j, Sudoku &sudoku) {
 }
 
 bool esValido(int tablero[9][9], int fila, int columna, int numero) {
+    // Verifica si el número ya está en la fila
     for (int i = 0; i < 9; i++) {
-        if (tablero[fila][i] == numero || tablero[i][columna] == numero) {
+        if (tablero[fila][i] == numero) {
             return false;
         }
     }
 
+    // Verifica si el número ya está en la columna
+    for (int i = 0; i < 9; i++) {
+        if (tablero[i][columna] == numero) {
+            return false;
+        }
+    }
+
+    // Verifica si el número ya está en el bloque 3x3
     int inicioFila = fila - fila % 3;
     int inicioColumna = columna - columna % 3;
     for (int i = 0; i < 3; i++) {
@@ -79,6 +88,8 @@ void generarSudokuAleatorio(int tablero[9][9], int numCeldasLlenas) {
         tablero[fila][columna] = numero;
     }
 }
+
+
 
 bool verificarSubTableroCompleto(int tablero[9][9], int inicioFila, int inicioColumna) {
     bool numeros[10] = {false};
@@ -114,6 +125,39 @@ void rellenarSudokuAleatorio(int tablero[9][9]) {
     }
 }
 
+bool resolverSudoku(int tablero[9][9], int fila, int columna) {
+    // Si hemos llegado al final de las filas, el Sudoku está completo
+    if (fila == 9) return true;
+
+    // Si estamos al final de la columna, pasamos a la siguiente fila
+    if (columna == 9) return resolverSudoku(tablero, fila + 1, 0);
+
+    // Si la celda ya tiene un valor, pasar a la siguiente
+    if (tablero[fila][columna] != 0) return resolverSudoku(tablero, fila, columna + 1);
+
+    // Probar números del 1 al 9
+    for (int num = 1; num <= 9; num++) {
+        if (esValido(tablero, fila, columna, num)) {
+            tablero[fila][columna] = num;
+            if (resolverSudoku(tablero, fila, columna + 1)) return true;
+            tablero[fila][columna] = 0; // Backtrack
+        }
+    }
+
+    return false; // No se encontró solución para este estado
+}
+
+void generarSudokuCompleto(int tablero[9][9]) {
+    // Inicializa el tablero con ceros (vacío)
+    for (int i = 0; i < 9; ++i) {
+        for (int j = 0; j < 9; ++j) {
+            tablero[i][j] = 0;
+        }
+    }
+    // Llenar el tablero usando backtracking
+    resolverSudoku(tablero, 0, 0);
+}
+
 bool verificarSubTablero(int tablero[9][9], int inicioFila, int inicioColumna) {
     bool numeros[10] = {false};
     bool completo = true;
@@ -134,10 +178,38 @@ bool verificarSubTablero(int tablero[9][9], int inicioFila, int inicioColumna) {
 
     return completo;  // Devuelve verdadero si la subcuadrícula está completa y correcta
 }
+// Función para eliminar números del Sudoku completo dependiendo de la dificultad
+void eliminarNumeros(int tablero[9][9], int celdasAEliminar) {
+    srand(time(0)); // Inicializa la semilla del generador de números aleatorios
+
+    int count = 0;
+    while (count < celdasAEliminar) {
+        int fila = rand() % 9;
+        int columna = rand() % 9;
+
+        if (tablero[fila][columna] != 0) {
+            tablero[fila][columna] = 0; // Eliminar número
+            count++;
+        }
+    }
+}
+// Representar celdas fijas
+bool esCeldaFija[9][9] = { false };
+
+// Función para marcar las celdas fijas que no se pueden editar
+void marcarCeldasFijas(int tablero[9][9]) {
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (tablero[i][j] != 0) {
+                esCeldaFija[i][j] = true; // Marcar como fija
+            }
+        }
+    }
+}
 
 int modoFacil()
 {
-RenderWindow medio(VideoMode(960, 720), "Facil");
+    RenderWindow medio(VideoMode(960, 720), "Facil");
     RectangleShape fondoMedio(Vector2f(960, 720));
     Texture texturaMedio;
     Sudoku sudokuMedio;
@@ -148,179 +220,19 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
     }
     fondoMedio.setTexture(&texturaMedio);
 
-    generarSudokuAleatorio(sudokuMedio.tablero, 30);
+    // Generar Sudoku completo y eliminar números para el modo fácil
+    generarSudokuCompleto(sudokuMedio.tablero);  // Generar Sudoku completo
+    eliminarNumeros(sudokuMedio.tablero, 30);    // Eliminar números para el modo fácil (30 celdas vacías)
 
-    int filaSeleccionada = 0;
-    int columnaSeleccionada = 0;
-
-    RectangleShape seleccion(Vector2f(38, 38));
-    seleccion.setFillColor(Color::Transparent);
-    seleccion.setOutlineThickness(2);
-    seleccion.setOutlineColor(Color::Yellow);
-
-    RenderWindow ventanaFlotante(VideoMode(300, 100), "Mensaje", Style::None);
-    ventanaFlotante.setPosition(medio.getPosition() + Vector2i(330, 310));
-    Text mensajeTexto;
-    mensajeTexto.setFont(sudokuMedio.font);
-    mensajeTexto.setCharacterSize(18);
-    mensajeTexto.setFillColor(Color::Black);
-    mensajeTexto.setPosition(10, 10);
-
-    Clock relojAnimacion;
-    bool mostrarVentanaFlotante = false;
-    float tiempoMostrarVentana = 0;
-
-    Clock cronometro;
-    Text timerText;
-    timerText.setFont(sudokuMedio.font);
-    timerText.setCharacterSize(24);
-    timerText.setFillColor(Color::White);
-    timerText.setPosition(10, 10);
-
-    int vidas = 6;
-    Text vidasText;
-    vidasText.setFont(sudokuMedio.font);
-    vidasText.setCharacterSize(24);
-    vidasText.setFillColor(Color::White);
-    vidasText.setPosition(10, 680);
-    vidasText.setString("Vidas: " + std::to_string(vidas));
-
-    RectangleShape botonMenu(Vector2f(100, 50));
-    botonMenu.setFillColor(Color::Blue);
-    botonMenu.setPosition(850, 10);
-
-    Text textoBotonMenu;
-    textoBotonMenu.setFont(sudokuMedio.font);
-    textoBotonMenu.setString("Menu");
-    textoBotonMenu.setCharacterSize(20);
-    textoBotonMenu.setFillColor(Color::White);
-    textoBotonMenu.setPosition(870, 20);
-
-    while (medio.isOpen()) {
-        Event evento;
-        while (medio.pollEvent(evento)) {
-            if (evento.type == Event::Closed) {
-                medio.close();
+    // Marcar celdas fijas para que no se puedan modificar
+    bool esCeldaFija[9][9] = { false };
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (sudokuMedio.tablero[i][j] != 0) {
+                esCeldaFija[i][j] = true;
             }
-            if (evento.type == Event::KeyPressed) {
-                if (evento.key.code == Keyboard::Up && filaSeleccionada > 0) {
-                    filaSeleccionada--;
-                } else if (evento.key.code == Keyboard::Down && filaSeleccionada < 8) {
-                    filaSeleccionada++;
-                } else if (evento.key.code == Keyboard::Left && columnaSeleccionada > 0) {
-                    columnaSeleccionada--;
-                } else if (evento.key.code == Keyboard::Right && columnaSeleccionada < 8) {
-                    columnaSeleccionada++;
-                }
-
-                if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9) {
-                    int valorIngresado = evento.key.code - Keyboard::Num0;
-
-                        if (esValido(sudokuMedio.tablero, filaSeleccionada, columnaSeleccionada, valorIngresado)) {
-                            sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
-
-                            if (verificarSubTablero(sudokuMedio.tablero, filaSeleccionada - filaSeleccionada % 3, columnaSeleccionada - columnaSeleccionada % 3)) {
-                                for (int i = 0; i < 3; i++) {
-                                    for (int j = 0; j < 3; j++) {
-                                        int fila = filaSeleccionada - filaSeleccionada % 3 + i;
-                                        int columna = columnaSeleccionada - columnaSeleccionada % 3 + j;
-                                        sudokuMedio.grid[fila][columna].setFillColor(Color::Green);  // Cambia el color a verde
-                                    }
-                                }
-                            }
-                        } else {
-                        mensajeTexto.setString("Valor no valido para esta casilla.");
-                        mostrarVentanaFlotante = true;
-                        tiempoMostrarVentana = 0;
-                        vidas--;
-                        vidasText.setString("Vidas: " + std::to_string(vidas));
-                        if (vidas <= 0) {
-                            mensajeTexto.setString("Game Over");
-                            mostrarVentanaFlotante = true;
-                            tiempoMostrarVentana = 0;
-                            medio.close();
-                        }
-                    }
-                }
-
-                if (evento.key.code == Keyboard::Num0) {
-                    sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = 0;
-                }
-            }
-            if (evento.type == Event::MouseButtonPressed) {
-                if (evento.mouseButton.button == Mouse::Left) {
-                    Vector2i mousePos = Mouse::getPosition(medio);
-                    if (botonMenu.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-                        medio.close();
-                    }
-                }
-            }
-        }
-
-        seleccion.setPosition(
-            sudokuMedio.offsetX + columnaSeleccionada * 40 + 1,
-            sudokuMedio.offsetY + filaSeleccionada * 40 + 1
-        );
-
-        float tiempoTranscurrido = relojAnimacion.getElapsedTime().asSeconds();
-        float escala = 1 + 0.1f * sin(tiempoTranscurrido * 5);
-        seleccion.setScale(escala, escala);
-
-        int segundos = static_cast<int>(cronometro.getElapsedTime().asSeconds());
-        int minutos = segundos / 60;
-        segundos %= 60;
-        timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
-
-        if (minutos >= 10) {
-            mensajeTexto.setString("Tiempo finalizado");
-            mostrarVentanaFlotante = true;
-            tiempoMostrarVentana = 0;
-            medio.close();
-        }
-
-        medio.clear();
-        medio.draw(fondoMedio);
-        sudokuMedio.dibujar(medio);
-        medio.draw(seleccion);
-        medio.draw(timerText);
-        medio.draw(vidasText);
-        medio.draw(botonMenu);
-        medio.draw(textoBotonMenu);
-        medio.display();
-
-        if (mostrarVentanaFlotante) {
-            ventanaFlotante.clear(Color::White);
-            ventanaFlotante.draw(mensajeTexto);
-            ventanaFlotante.display();
-
-            tiempoMostrarVentana += relojAnimacion.restart().asSeconds();
-            if (tiempoMostrarVentana >= 2) {
-                mostrarVentanaFlotante = false;
-                ventanaFlotante.setVisible(false);
-            } else {
-                ventanaFlotante.setVisible(true);
-            }
-        } else {
-            relojAnimacion.restart();
         }
     }
-
-    return 0;
-}
-
-int modoMedio() {
-    RenderWindow medio(VideoMode(960, 720), "Medio");
-    RectangleShape fondoMedio(Vector2f(960, 720));
-    Texture texturaMedio;
-    Sudoku sudokuMedio;
-
-    if (!texturaMedio.loadFromFile("Fondos/fondomedio.png")) {
-        std::cerr << "No se pudo cargar la textura del fondo del modo medio" << std::endl;
-        return -1;
-    }
-    fondoMedio.setTexture(&texturaMedio);
-
-    generarSudokuAleatorio(sudokuMedio.tablero, 30);
 
     int filaSeleccionada = 0;
     int columnaSeleccionada = 0;
@@ -350,7 +262,7 @@ int modoMedio() {
     timerText.setFillColor(Color::White);
     timerText.setPosition(10, 10);
 
-    int vidas = 3;
+    int vidas = 10;
     Text vidasText;
     vidasText.setFont(sudokuMedio.font);
     vidasText.setCharacterSize(24);
@@ -408,20 +320,22 @@ int modoMedio() {
                 if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9) {
                     int valorIngresado = evento.key.code - Keyboard::Num0;
 
-                    if (esValido(sudokuMedio.tablero, filaSeleccionada, columnaSeleccionada, valorIngresado)) {
+                    // Solo permite modificar celdas que no son fijas
+                    if (!esCeldaFija[filaSeleccionada][columnaSeleccionada] &&
+                        esValido(sudokuMedio.tablero, filaSeleccionada, columnaSeleccionada, valorIngresado)) {
                         sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
 
-                        int inicioFila = filaSeleccionada - filaSeleccionada % 3;
-                        int inicioColumna = columnaSeleccionada - columnaSeleccionada % 3;
-                        if (verificarSubTableroCompleto(sudokuMedio.tablero, inicioFila, inicioColumna)) {
+                        if (verificarSubTablero(sudokuMedio.tablero, filaSeleccionada - filaSeleccionada % 3, columnaSeleccionada - columnaSeleccionada % 3)) {
                             for (int i = 0; i < 3; i++) {
                                 for (int j = 0; j < 3; j++) {
-                                    sudokuMedio.grid[inicioFila + i][inicioColumna + j].setFillColor(Color(173, 216, 230));
+                                    int fila = filaSeleccionada - filaSeleccionada % 3 + i;
+                                    int columna = columnaSeleccionada - columnaSeleccionada % 3 + j;
+                                    sudokuMedio.grid[fila][columna].setFillColor(Color::Green);  // Cambia el color a verde
                                 }
                             }
                         }
                     } else {
-                        mensajeTexto.setString("Valor no valido para esta casilla.");
+                        mensajeTexto.setString("Valor no valido o casilla fija.");
                         mostrarVentanaFlotante = true;
                         tiempoMostrarVentana = 0;
                         vidas--;
@@ -435,7 +349,250 @@ int modoMedio() {
                     }
                 }
 
-                if (evento.key.code == Keyboard::Num0) {
+                if (evento.key.code == Keyboard::Num0 && !esCeldaFija[filaSeleccionada][columnaSeleccionada]) {
+                    sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = 0;
+                }
+            }
+            if (evento.type == Event::MouseButtonPressed) {
+                if (evento.mouseButton.button == Mouse::Left) {
+                    Vector2i mousePos = Mouse::getPosition(medio);
+                    if (botonMenu.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                        menuAbierto = !menuAbierto;
+                        if (menuAbierto) {
+                            tiempoAcumulado += cronometro.getElapsedTime();
+                            cronometro.restart();
+                        } else {
+                            cronometro.restart();
+                        }
+                    }
+                    if (menuAbierto) {
+                        for (int i = 0; i < opcionesMenu.size(); ++i) {
+                            if (opcionesMenu[i].getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                                if (i == 0) { // Volver a la partida
+                                    menuAbierto = false;
+                                    cronometro.restart();
+                                } else if (i == 1) { // Regresar al Menu Principal
+                                    return 0; // Volver al menú principal
+                                } else if (i == 2) { // Salir del Juego
+                                    medio.close();
+                                    return -1; // Salir del juego
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        seleccion.setPosition(
+            sudokuMedio.offsetX + columnaSeleccionada * 40 + 1,
+            sudokuMedio.offsetY + filaSeleccionada * 40 + 1
+        );
+
+        float tiempoTranscurrido = relojAnimacion.getElapsedTime().asSeconds();
+        float escala = 1 + 0.1f * sin(tiempoTranscurrido * 5);
+        seleccion.setScale(escala, escala);
+
+        if (!menuAbierto && !juegoTerminado) {
+            Time tiempoTotal = tiempoAcumulado + cronometro.getElapsedTime();
+            int segundos = static_cast<int>(tiempoTotal.asSeconds());
+            int minutos = segundos / 60;
+            segundos %= 60;
+            timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
+
+            if (minutos >= 5) {
+                mensajeTexto.setString("Tiempo finalizado");
+                mostrarVentanaFlotante = true;
+                tiempoMostrarVentana = 0;
+                juegoTerminado = true;
+            }
+        }
+
+        medio.clear();
+        medio.draw(fondoMedio);
+        sudokuMedio.dibujar(medio);
+        medio.draw(seleccion);
+        medio.draw(timerText);
+        medio.draw(vidasText);
+        medio.draw(botonMenu);
+        medio.draw(textoBotonMenu);
+
+        if (menuAbierto) {
+            medio.draw(fondoMenuPausa);
+            for (const auto& opcion : opcionesMenu) {
+                medio.draw(opcion);
+            }
+        }
+
+        if (mostrarVentanaFlotante) {
+            ventanaFlotante.clear(Color::White);
+            ventanaFlotante.draw(mensajeTexto);
+            ventanaFlotante.display();
+
+            tiempoMostrarVentana += relojAnimacion.restart().asSeconds();
+            if (tiempoMostrarVentana >= 2) {
+                mostrarVentanaFlotante = false;
+                ventanaFlotante.setVisible(false);
+            } else {
+                ventanaFlotante.setVisible(true);
+            }
+        } else {
+            relojAnimacion.restart();
+        }
+
+        medio.display();
+
+        if (juegoTerminado) {
+            sf::sleep(sf::seconds(2));
+            return 0; // Volver al menú principal después de 2 segundos
+        }
+    }
+
+    return 0;
+}
+
+int modoMedio() {
+    RenderWindow medio(VideoMode(960, 720), "Facil");
+    RectangleShape fondoMedio(Vector2f(960, 720));
+    Texture texturaMedio;
+    Sudoku sudokuMedio;
+
+    if (!texturaMedio.loadFromFile("Fondos/fondomedio.png")) {
+        std::cerr << "No se pudo cargar la textura del fondo del modo medio" << std::endl;
+        return -1;
+    }
+    fondoMedio.setTexture(&texturaMedio);
+
+    // Generar Sudoku completo y eliminar números para el modo fácil
+    generarSudokuCompleto(sudokuMedio.tablero);  // Generar Sudoku completo
+    eliminarNumeros(sudokuMedio.tablero, 40);    // Eliminar números para el modo fácil (30 celdas vacías)
+
+    // Marcar celdas fijas para que no se puedan modificar
+    bool esCeldaFija[9][9] = { false };
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (sudokuMedio.tablero[i][j] != 0) {
+                esCeldaFija[i][j] = true;
+            }
+        }
+    }
+
+    int filaSeleccionada = 0;
+    int columnaSeleccionada = 0;
+
+    RectangleShape seleccion(Vector2f(38, 38));
+    seleccion.setFillColor(Color::Transparent);
+    seleccion.setOutlineThickness(2);
+    seleccion.setOutlineColor(Color::Yellow);
+
+    RenderWindow ventanaFlotante(VideoMode(300, 100), "Mensaje", Style::None);
+    ventanaFlotante.setPosition(medio.getPosition() + Vector2i(330, 310));
+    Text mensajeTexto;
+    mensajeTexto.setFont(sudokuMedio.font);
+    mensajeTexto.setCharacterSize(18);
+    mensajeTexto.setFillColor(Color::Black);
+    mensajeTexto.setPosition(10, 10);
+
+    Clock relojAnimacion;
+    bool mostrarVentanaFlotante = false;
+    float tiempoMostrarVentana = 0;
+
+    Clock cronometro;
+    Time tiempoAcumulado = Time::Zero;
+    Text timerText;
+    timerText.setFont(sudokuMedio.font);
+    timerText.setCharacterSize(24);
+    timerText.setFillColor(Color::White);
+    timerText.setPosition(10, 10);
+
+    int vidas = 6;
+    Text vidasText;
+    vidasText.setFont(sudokuMedio.font);
+    vidasText.setCharacterSize(24);
+    vidasText.setFillColor(Color::White);
+    vidasText.setPosition(10, 680);
+    vidasText.setString("Vidas: " + std::to_string(vidas));
+
+    RectangleShape botonMenu(Vector2f(100, 50));
+    botonMenu.setFillColor(Color::Blue);
+    botonMenu.setPosition(850, 10);
+
+    Text textoBotonMenu;
+    textoBotonMenu.setFont(sudokuMedio.font);
+    textoBotonMenu.setString("Menu");
+    textoBotonMenu.setCharacterSize(20);
+    textoBotonMenu.setFillColor(Color::White);
+    textoBotonMenu.setPosition(870, 20);
+
+    bool menuAbierto = false;
+    RectangleShape fondoMenuPausa(Vector2f(300, 200));
+    fondoMenuPausa.setFillColor(Color(100, 100, 100, 200));
+    fondoMenuPausa.setPosition(330, 260);
+
+    std::vector<Text> opcionesMenu;
+    std::vector<std::string> textosOpciones = {"Volver a la partida", "Regresar al Menu Principal", "Salir del Juego"};
+    for (int i = 0; i < 3; ++i) {
+        Text opcion;
+        opcion.setFont(sudokuMedio.font);
+        opcion.setString(textosOpciones[i]);
+        opcion.setCharacterSize(20);
+        opcion.setFillColor(Color::White);
+        opcion.setPosition(350, 280 + i * 50);
+        opcionesMenu.push_back(opcion);
+    }
+
+    bool juegoTerminado = false;
+
+    while (medio.isOpen()) {
+        Event evento;
+        while (medio.pollEvent(evento)) {
+            if (evento.type == Event::Closed) {
+                medio.close();
+            }
+            if (evento.type == Event::KeyPressed && !menuAbierto && !juegoTerminado) {
+                if (evento.key.code == Keyboard::Up && filaSeleccionada > 0) {
+                    filaSeleccionada--;
+                } else if (evento.key.code == Keyboard::Down && filaSeleccionada < 8) {
+                    filaSeleccionada++;
+                } else if (evento.key.code == Keyboard::Left && columnaSeleccionada > 0) {
+                    columnaSeleccionada--;
+                } else if (evento.key.code == Keyboard::Right && columnaSeleccionada < 8) {
+                    columnaSeleccionada++;
+                }
+
+                if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9) {
+                    int valorIngresado = evento.key.code - Keyboard::Num0;
+
+                    // Solo permite modificar celdas que no son fijas
+                    if (!esCeldaFija[filaSeleccionada][columnaSeleccionada] &&
+                        esValido(sudokuMedio.tablero, filaSeleccionada, columnaSeleccionada, valorIngresado)) {
+                        sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
+
+                        if (verificarSubTablero(sudokuMedio.tablero, filaSeleccionada - filaSeleccionada % 3, columnaSeleccionada - columnaSeleccionada % 3)) {
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    int fila = filaSeleccionada - filaSeleccionada % 3 + i;
+                                    int columna = columnaSeleccionada - columnaSeleccionada % 3 + j;
+                                    sudokuMedio.grid[fila][columna].setFillColor(Color::Green);  // Cambia el color a verde
+                                }
+                            }
+                        }
+                    } else {
+                        mensajeTexto.setString("Valor no valido o casilla fija.");
+                        mostrarVentanaFlotante = true;
+                        tiempoMostrarVentana = 0;
+                        vidas--;
+                        vidasText.setString("Vidas: " + std::to_string(vidas));
+                        if (vidas <= 0) {
+                            mensajeTexto.setString("Game Over");
+                            mostrarVentanaFlotante = true;
+                            tiempoMostrarVentana = 0;
+                            juegoTerminado = true;
+                        }
+                    }
+                }
+
+                if (evento.key.code == Keyboard::Num0 && !esCeldaFija[filaSeleccionada][columnaSeleccionada]) {
                     sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = 0;
                 }
             }
@@ -540,29 +697,243 @@ int modoMedio() {
 
 
 int modoDificil() {
-    RenderWindow dificil(VideoMode(960, 720), "Difï¿½cil");
-    RectangleShape fondoDificil(Vector2f(960, 720));
-    Texture texturaDificil;
-    Sudoku sudokuDificil;
+    RenderWindow medio(VideoMode(960, 720), "Dificil");
+    RectangleShape fondoMedio(Vector2f(960, 720));
+    Texture texturaMedio;
+    Sudoku sudokuMedio;
 
-    if (!texturaDificil.loadFromFile("Fondos/fondodificil.png")) {
-        std::cerr << "No se pudo cargar la textura del fondo del modo difï¿½cil" << std::endl;
+    if (!texturaMedio.loadFromFile("Fondos/fondodificil.png")) {
+        std::cerr << "No se pudo cargar la textura del fondo del modo medio" << std::endl;
         return -1;
     }
-    fondoDificil.setTexture(&texturaDificil);
+    fondoMedio.setTexture(&texturaMedio);
 
-    while (dificil.isOpen()) {
+    // Generar Sudoku completo y eliminar números para el modo fácil
+    generarSudokuCompleto(sudokuMedio.tablero);  // Generar Sudoku completo
+    eliminarNumeros(sudokuMedio.tablero, 50);    // Eliminar números para el modo fácil (30 celdas vacías)
+
+    // Marcar celdas fijas para que no se puedan modificar
+    bool esCeldaFija[9][9] = { false };
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (sudokuMedio.tablero[i][j] != 0) {
+                esCeldaFija[i][j] = true;
+            }
+        }
+    }
+
+    int filaSeleccionada = 0;
+    int columnaSeleccionada = 0;
+
+    RectangleShape seleccion(Vector2f(38, 38));
+    seleccion.setFillColor(Color::Transparent);
+    seleccion.setOutlineThickness(2);
+    seleccion.setOutlineColor(Color::Yellow);
+
+    RenderWindow ventanaFlotante(VideoMode(300, 100), "Mensaje", Style::None);
+    ventanaFlotante.setPosition(medio.getPosition() + Vector2i(330, 310));
+    Text mensajeTexto;
+    mensajeTexto.setFont(sudokuMedio.font);
+    mensajeTexto.setCharacterSize(18);
+    mensajeTexto.setFillColor(Color::Black);
+    mensajeTexto.setPosition(10, 10);
+
+    Clock relojAnimacion;
+    bool mostrarVentanaFlotante = false;
+    float tiempoMostrarVentana = 0;
+
+    Clock cronometro;
+    Time tiempoAcumulado = Time::Zero;
+    Text timerText;
+    timerText.setFont(sudokuMedio.font);
+    timerText.setCharacterSize(24);
+    timerText.setFillColor(Color::White);
+    timerText.setPosition(10, 10);
+
+    int vidas = 3;
+    Text vidasText;
+    vidasText.setFont(sudokuMedio.font);
+    vidasText.setCharacterSize(24);
+    vidasText.setFillColor(Color::White);
+    vidasText.setPosition(10, 680);
+    vidasText.setString("Vidas: " + std::to_string(vidas));
+
+    RectangleShape botonMenu(Vector2f(100, 50));
+    botonMenu.setFillColor(Color::Blue);
+    botonMenu.setPosition(850, 10);
+
+    Text textoBotonMenu;
+    textoBotonMenu.setFont(sudokuMedio.font);
+    textoBotonMenu.setString("Menu");
+    textoBotonMenu.setCharacterSize(20);
+    textoBotonMenu.setFillColor(Color::White);
+    textoBotonMenu.setPosition(870, 20);
+
+    bool menuAbierto = false;
+    RectangleShape fondoMenuPausa(Vector2f(300, 200));
+    fondoMenuPausa.setFillColor(Color(100, 100, 100, 200));
+    fondoMenuPausa.setPosition(330, 260);
+
+    std::vector<Text> opcionesMenu;
+    std::vector<std::string> textosOpciones = {"Volver a la partida", "Regresar al Menu Principal", "Salir del Juego"};
+    for (int i = 0; i < 3; ++i) {
+        Text opcion;
+        opcion.setFont(sudokuMedio.font);
+        opcion.setString(textosOpciones[i]);
+        opcion.setCharacterSize(20);
+        opcion.setFillColor(Color::White);
+        opcion.setPosition(350, 280 + i * 50);
+        opcionesMenu.push_back(opcion);
+    }
+
+    bool juegoTerminado = false;
+
+    while (medio.isOpen()) {
         Event evento;
-        while (dificil.pollEvent(evento)) {
+        while (medio.pollEvent(evento)) {
             if (evento.type == Event::Closed) {
-                dificil.close();
+                medio.close();
+            }
+            if (evento.type == Event::KeyPressed && !menuAbierto && !juegoTerminado) {
+                if (evento.key.code == Keyboard::Up && filaSeleccionada > 0) {
+                    filaSeleccionada--;
+                } else if (evento.key.code == Keyboard::Down && filaSeleccionada < 8) {
+                    filaSeleccionada++;
+                } else if (evento.key.code == Keyboard::Left && columnaSeleccionada > 0) {
+                    columnaSeleccionada--;
+                } else if (evento.key.code == Keyboard::Right && columnaSeleccionada < 8) {
+                    columnaSeleccionada++;
+                }
+
+                if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9) {
+                    int valorIngresado = evento.key.code - Keyboard::Num0;
+
+                    // Solo permite modificar celdas que no son fijas
+                    if (!esCeldaFija[filaSeleccionada][columnaSeleccionada] &&
+                        esValido(sudokuMedio.tablero, filaSeleccionada, columnaSeleccionada, valorIngresado)) {
+                        sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
+
+                        if (verificarSubTablero(sudokuMedio.tablero, filaSeleccionada - filaSeleccionada % 3, columnaSeleccionada - columnaSeleccionada % 3)) {
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    int fila = filaSeleccionada - filaSeleccionada % 3 + i;
+                                    int columna = columnaSeleccionada - columnaSeleccionada % 3 + j;
+                                    sudokuMedio.grid[fila][columna].setFillColor(Color::Green);  // Cambia el color a verde
+                                }
+                            }
+                        }
+                    } else {
+                        mensajeTexto.setString("Valor no valido o casilla fija.");
+                        mostrarVentanaFlotante = true;
+                        tiempoMostrarVentana = 0;
+                        vidas--;
+                        vidasText.setString("Vidas: " + std::to_string(vidas));
+                        if (vidas <= 0) {
+                            mensajeTexto.setString("Game Over");
+                            mostrarVentanaFlotante = true;
+                            tiempoMostrarVentana = 0;
+                            juegoTerminado = true;
+                        }
+                    }
+                }
+
+                if (evento.key.code == Keyboard::Num0 && !esCeldaFija[filaSeleccionada][columnaSeleccionada]) {
+                    sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = 0;
+                }
+            }
+            if (evento.type == Event::MouseButtonPressed) {
+                if (evento.mouseButton.button == Mouse::Left) {
+                    Vector2i mousePos = Mouse::getPosition(medio);
+                    if (botonMenu.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                        menuAbierto = !menuAbierto;
+                        if (menuAbierto) {
+                            tiempoAcumulado += cronometro.getElapsedTime();
+                            cronometro.restart();
+                        } else {
+                            cronometro.restart();
+                        }
+                    }
+                    if (menuAbierto) {
+                        for (int i = 0; i < opcionesMenu.size(); ++i) {
+                            if (opcionesMenu[i].getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                                if (i == 0) { // Volver a la partida
+                                    menuAbierto = false;
+                                    cronometro.restart();
+                                } else if (i == 1) { // Regresar al Menu Principal
+                                    return 0; // Volver al menú principal
+                                } else if (i == 2) { // Salir del Juego
+                                    medio.close();
+                                    return -1; // Salir del juego
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        dificil.clear();
-        dificil.draw(fondoDificil);
-        sudokuDificil.dibujar(dificil);
-        dificil.display();
+        seleccion.setPosition(
+            sudokuMedio.offsetX + columnaSeleccionada * 40 + 1,
+            sudokuMedio.offsetY + filaSeleccionada * 40 + 1
+        );
+
+        float tiempoTranscurrido = relojAnimacion.getElapsedTime().asSeconds();
+        float escala = 1 + 0.1f * sin(tiempoTranscurrido * 5);
+        seleccion.setScale(escala, escala);
+
+        if (!menuAbierto && !juegoTerminado) {
+            Time tiempoTotal = tiempoAcumulado + cronometro.getElapsedTime();
+            int segundos = static_cast<int>(tiempoTotal.asSeconds());
+            int minutos = segundos / 60;
+            segundos %= 60;
+            timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
+
+            if (minutos >= 5) {
+                mensajeTexto.setString("Tiempo finalizado");
+                mostrarVentanaFlotante = true;
+                tiempoMostrarVentana = 0;
+                juegoTerminado = true;
+            }
+        }
+
+        medio.clear();
+        medio.draw(fondoMedio);
+        sudokuMedio.dibujar(medio);
+        medio.draw(seleccion);
+        medio.draw(timerText);
+        medio.draw(vidasText);
+        medio.draw(botonMenu);
+        medio.draw(textoBotonMenu);
+
+        if (menuAbierto) {
+            medio.draw(fondoMenuPausa);
+            for (const auto& opcion : opcionesMenu) {
+                medio.draw(opcion);
+            }
+        }
+
+        if (mostrarVentanaFlotante) {
+            ventanaFlotante.clear(Color::White);
+            ventanaFlotante.draw(mensajeTexto);
+            ventanaFlotante.display();
+
+            tiempoMostrarVentana += relojAnimacion.restart().asSeconds();
+            if (tiempoMostrarVentana >= 2) {
+                mostrarVentanaFlotante = false;
+                ventanaFlotante.setVisible(false);
+            } else {
+                ventanaFlotante.setVisible(true);
+            }
+        } else {
+            relojAnimacion.restart();
+        }
+
+        medio.display();
+
+        if (juegoTerminado) {
+            sf::sleep(sf::seconds(2));
+            return 0; // Volver al menú principal después de 2 segundos
+        }
     }
 
     return 0;
@@ -640,7 +1011,6 @@ int modoAutomatico() {
 
     return 0;
 }
-
 
 int interfaz() {
     RenderWindow menu(VideoMode(960, 720), "Menu Principal", Style::Default);
