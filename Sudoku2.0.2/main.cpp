@@ -1016,6 +1016,17 @@ int modoAutomatico()
     floatingText.setFillColor(Color::White);
     floatingText.setPosition(100, 100);
 
+    RectangleShape botonMenu(Vector2f(100, 50));
+    botonMenu.setFillColor(Color::Blue);
+    botonMenu.setPosition(850, 10);
+
+    Text textoBotonMenu;
+    textoBotonMenu.setFont(sudokuAutomatico.font);
+    textoBotonMenu.setString("Menu");
+    textoBotonMenu.setCharacterSize(20);
+    textoBotonMenu.setFillColor(Color::White);
+    textoBotonMenu.setPosition(870, 20);
+
     bool menuAbierto = false;
     RectangleShape fondoMenuPausa(Vector2f(300, 200));
     fondoMenuPausa.setFillColor(Color(100, 100, 100, 200));
@@ -1035,7 +1046,7 @@ int modoAutomatico()
     }
 
     Clock clock;
-    float tiempoMensaje = 2;
+    float tiempoMensaje = 1;
     bool mensajeVisible = true;
 
     int fila = 0;
@@ -1050,7 +1061,7 @@ int modoAutomatico()
 
     if (!texturaAutomatico.loadFromFile("Fondos/fondoautomatico.png"))
     {
-        std::cerr << "No se pudo cargar la textura del fondo del modo autom�tico" << std::endl;
+        std::cerr << "No se pudo cargar la textura del fondo del modo automático" << std::endl;
         return -1;
     }
     fondoAutomatico.setTexture(&texturaAutomatico);
@@ -1122,6 +1133,31 @@ int modoAutomatico()
                     sudokuAutomatico.tablero[fila][columna] = 0;
                 }
             }
+
+            if (evento.type == Event::MouseButtonPressed) {
+                if (evento.mouseButton.button == Mouse::Left) {
+                    Vector2i mousePos = Mouse::getPosition(automatico);
+                    if (botonMenu.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                        menuAbierto = !menuAbierto;
+                    }
+                    if (menuAbierto) {
+                        for (int i = 0; i < opcionesMenu.size(); ++i) {
+                            if (opcionesMenu[i].getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                                if (i == 0) { // Volver
+                                    menuAbierto = false;
+                                } else if (i == 1) { // Reiniciar
+                                    for (int i = 0; i < 9; i++)
+                                        for (int j = 0; j < 9; j++)
+                                            sudokuAutomatico.tablero[i][j] = 0;
+                                    menuAbierto = false;
+                                } else if (i == 2) { // Menú principal
+                                    return 0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         seleccion.setPosition(
@@ -1133,10 +1169,20 @@ int modoAutomatico()
 
         if (mensajeVisible) automatico.draw(floatingText);
         automatico.draw(fondoAutomatico);
-        sudokuAutomatico.dibujar(automatico);  // Dibujar la cuadr�cula de Sudoku
+        sudokuAutomatico.dibujar(automatico);  // Dibujar la cuadricula de Sudoku
         automatico.draw(seleccion);
+        automatico.draw(botonMenu);
+        automatico.draw(textoBotonMenu);
+
+        if (menuAbierto) {
+            automatico.draw(fondoMenuPausa);
+            for (const auto& opcion : opcionesMenu) {
+                automatico.draw(opcion);
+            }
+        }
 
         automatico.display();
+
     }
 
     return 0;

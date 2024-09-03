@@ -993,7 +993,7 @@
 	"MainMenu.h"
 	"Sudoku.h"
 
-1725340839 source:c:\users\windows\onedrive\escritorio\sudoku\sudokuproyect\sudoku2.0.2\main.cpp
+1725381882 source:c:\users\windows\onedrive\escritorio\sudoku\sudokuproyect\sudoku2.0.2\main.cpp
 	<SFML/Graphics.hpp>
 	<SFML/Audio.hpp>
 	<iostream>
@@ -1867,13 +1867,15 @@
 	<SFML/Graphics.hpp>
 	<iostream>
 
-1725323172 c:\users\windows\onedrive\escritorio\sudoku\sudokuproyect\sudoku2.0.2\sudoku.h
+1725380082 c:\users\windows\onedrive\escritorio\sudoku\sudokuproyect\sudoku2.0.2\sudoku.h
 	<SFML/Graphics.hpp>
 
 1725323171 source:c:\users\windows\onedrive\escritorio\sudoku\sudokuproyect\sudoku2.0.2\mainmenu.cpp
 	"MainMenu.h"
 
-1725323172 source:c:\users\windows\onedrive\escritorio\sudoku\sudokuproyect\sudoku2.0.2\sudoku.cpp
+1725381882 source:c:\users\windows\onedrive\escritorio\sudoku\sudokuproyect\sudoku2.0.2\sudoku.cpp
+	"Sudoku.h"
+	<iostream>
 
 1725331343 source:c:\users\lasso\onedrive\escritorio\proyecto sudoku github\sudoku2.0.2\main.cpp
 	<SFML/Graphics.hpp>
