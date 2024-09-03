@@ -134,7 +134,7 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
     timerText.setFillColor(Color::White);
     timerText.setPosition(10, 10);
 
-    int vidas = 6;
+    int vidas = 10;
     Text vidasText;
     vidasText.setFont(sudokuMedio.font);
     vidasText.setCharacterSize(24);
