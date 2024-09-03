@@ -7,6 +7,37 @@
 #include "MainMenu.h"
 #include "Sudoku.h"
 
+bool esSeguro(int num, int i, int j, Sudoku &sudoku) {
+    for (int k = 0; k < 9; k++) {
+        if (sudoku.tablero[k][j] == num) return false;
+        if (sudoku.tablero[i][k] == num) return false;
+
+        int ki = 3 * (i / 3) + k % 3;
+        int kj = 3 * (j / 3) + k / 3;
+        if (sudoku.tablero[ki][kj] == num) return false;
+    }
+    return true;
+}
+
+bool llenar(int i, int j, Sudoku &sudoku) {
+    if (j == 9) {
+        if (i == 8) return true;
+        i++;
+        j = 0;
+    }
+
+    if (sudoku.tablero[i][j] != 0) return llenar(i, j + 1, sudoku);
+
+    for (int num = 1; num <= 9; num++)
+        if (esSeguro(num, i, j, sudoku)) {
+            sudoku.tablero[i][j] = num;
+            if (llenar(i, j + 1, sudoku)) return true;
+            sudoku.tablero[i][j] = 0;
+        }
+
+    return false;
+}
+
 bool esValido(int tablero[9][9], int fila, int columna, int numero) {
     for (int i = 0; i < 9; i++) {
         if (tablero[fila][i] == numero || tablero[i][columna] == numero) {
@@ -27,7 +58,6 @@ bool esValido(int tablero[9][9], int fila, int columna, int numero) {
     return true;
 }
 
-<<<<<<< HEAD
 void generarSudokuAleatorio(int tablero[9][9], int numCeldasLlenas) {
     srand(time(0));
     for (int i = 0; i < 9; i++) {
@@ -62,14 +92,13 @@ bool verificarSubTablero(int tablero[9][9], int inicioFila, int inicioColumna) {
     return true;
 }
 
-=======
-// Función para rellenar el tablero con números aleatorios en modo fácil
+// FunciÃ³n para rellenar el tablero con nÃºmeros aleatorios en modo fÃ¡cil
 void rellenarSudokuAleatorio(int tablero[9][9]) {
-    std::srand(static_cast<unsigned int>(std::time(nullptr))); // Inicializa la semilla de números aleatorios
+    std::srand(static_cast<unsigned int>(std::time(nullptr))); // Inicializa la semilla de nÃºmeros aleatorios
 
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
-            if (tablero[i][j] == 0) { // Si la celda está vacía
+            if (tablero[i][j] == 0) { // Si la celda estÃ¡ vacÃ­a
                 std::vector<int> numerosDisponibles;
                 for (int num = 1; num <= 9; num++) {
                     if (esValido(tablero, i, j, num)) {
@@ -107,7 +136,7 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
     int columnaSeleccionada = 0;
     int valorIngresado = 0;
 
-    // Animación de selección
+    // AnimaciÃ³n de selecciÃ³n
     RectangleShape seleccion(Vector2f(38, 38));
     seleccion.setFillColor(Color::Transparent);
     seleccion.setOutlineThickness(2);
@@ -133,7 +162,7 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
                 medio.close();
             }
             if (evento.type == Event::KeyPressed) {
-                // Mover la selección de la celda con las teclas de dirección
+                // Mover la selecciÃ³n de la celda con las teclas de direcciÃ³n
                 if (evento.key.code == Keyboard::Up && filaSeleccionada > 0) {
                     filaSeleccionada--;
                 } else if (evento.key.code == Keyboard::Down && filaSeleccionada < 8) {
@@ -144,7 +173,7 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
                     columnaSeleccionada++;
                 }
 
-                // Ingresar un valor en la celda usando las teclas numéricas
+                // Ingresar un valor en la celda usando las teclas numÃ©ricas
                 if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9) {
                     valorIngresado = evento.key.code - Keyboard::Num0;
 
@@ -164,13 +193,13 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
             }
         }
 
-        // Actualizar posición de la selección
+        // Actualizar posiciÃ³n de la selecciÃ³n
         seleccion.setPosition(
             sudokuMedio.offsetX + columnaSeleccionada * 40 + 1,
             sudokuMedio.offsetY + filaSeleccionada * 40 + 1
         );
 
-        // Animación de la selección
+        // AnimaciÃ³n de la selecciÃ³n
         float tiempoTranscurrido = relojAnimacion.getElapsedTime().asSeconds();
         float escala = 1 + 0.1f * sin(tiempoTranscurrido * 5);
         seleccion.setScale(escala, escala);
@@ -202,8 +231,6 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
     return 0;
 }
 
-
->>>>>>> 240e7bdd98e805b3f852df47d610226375526616
 int modoMedio() {
     RenderWindow medio(VideoMode(960, 720), "Medio");
     RectangleShape fondoMedio(Vector2f(960, 720));
@@ -376,43 +403,14 @@ int modoMedio() {
     return 0;
 }
 
-int modoFacil() {
-    RenderWindow facil(VideoMode(960, 720), "Fácil");
-    RectangleShape fondoFacil(Vector2f(960, 720));
-    Texture texturaFacil;
-    Sudoku sudokuFacil;
-
-    if (!texturaFacil.loadFromFile("Fondos/fondofacil.png")) {
-        std::cerr << "No se pudo cargar la textura del fondo del modo fácil" << std::endl;
-        return -1;
-    }
-    fondoFacil.setTexture(&texturaFacil);
-
-    while (facil.isOpen()) {
-        Event evento;
-        while (facil.pollEvent(evento)) {
-            if (evento.type == Event::Closed) {
-                facil.close();
-            }
-        }
-
-        facil.clear();
-        facil.draw(fondoFacil);
-        sudokuFacil.dibujar(facil);
-        facil.display();
-    }
-
-    return 0;
-}
-
 int modoDificil() {
-    RenderWindow dificil(VideoMode(960, 720), "Difícil");
+    RenderWindow dificil(VideoMode(960, 720), "DifÃ­cil");
     RectangleShape fondoDificil(Vector2f(960, 720));
     Texture texturaDificil;
     Sudoku sudokuDificil;
 
     if (!texturaDificil.loadFromFile("Fondos/fondodificil.png")) {
-        std::cerr << "No se pudo cargar la textura del fondo del modo difícil" << std::endl;
+        std::cerr << "No se pudo cargar la textura del fondo del modo difÃ­cil" << std::endl;
         return -1;
     }
     fondoDificil.setTexture(&texturaDificil);
@@ -435,13 +433,24 @@ int modoDificil() {
 }
 
 int modoAutomatico() {
-    RenderWindow automatico(VideoMode(960, 720), "Automático");
+    RenderWindow automatico(VideoMode(960, 720), "Automï¿½tico");
     RectangleShape fondoAutomatico(Vector2f(960, 720));
     Texture texturaAutomatico;
     Sudoku sudokuAutomatico;
 
-    if (!texturaAutomatico.loadFromFile("Fondos/fondoautomatico.png")) {
-        std::cerr << "No se pudo cargar la textura del fondo del modo automático" << std::endl;
+    int fila = 0;
+    int columna = 0;
+    int valor = 0;
+    int resoluble = false;
+
+    RectangleShape seleccion(Vector2f(38, 38));
+    seleccion.setFillColor(Color::Transparent);
+    seleccion.setOutlineThickness(2);
+    seleccion.setOutlineColor(Color::Yellow);
+
+    if (!texturaAutomatico.loadFromFile("Fondos/fondoautomatico.png"))
+    {
+        std::cerr << "No se pudo cargar la textura del fondo del modo automï¿½tico" << std::endl;
         return -1;
     }
     fondoAutomatico.setTexture(&texturaAutomatico);
@@ -452,17 +461,49 @@ int modoAutomatico() {
             if (evento.type == Event::Closed) {
                 automatico.close();
             }
+            if (evento.type == Event::KeyPressed) {
+                if (evento.key.code == Keyboard::Up && fila > 0) {
+                    fila--;
+                } else if (evento.key.code == Keyboard::Down && fila < 8) {
+                    fila++;
+                } else if (evento.key.code == Keyboard::Left && columna > 0) {
+                    columna--;
+                } else if (evento.key.code == Keyboard::Right && columna < 8) {
+                    columna++;
+                }
+
+                if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9) {
+                    valor = evento.key.code - Keyboard::Num0;
+
+                    if (esValido(sudokuAutomatico.tablero, fila, columna, valor)) {
+                        sudokuAutomatico.tablero[fila][columna] = valor;
+                    }
+                }
+
+                if (evento.key.code == Keyboard::Key::Enter) {
+                    llenar(0, 0, sudokuAutomatico);
+                }
+
+                if (evento.key.code == Keyboard::Num0) {
+                    sudokuAutomatico.tablero[fila][columna] = 0;
+                }
+            }
         }
+
+        seleccion.setPosition(
+            sudokuAutomatico.offsetX + columna * 40 + 1,
+            sudokuAutomatico.offsetY + fila * 40 + 1
+        );
 
         automatico.clear();
         automatico.draw(fondoAutomatico);
-        sudokuAutomatico.dibujar(automatico);
+        sudokuAutomatico.dibujar(automatico);  // Dibujar la cuadrï¿½cula de Sudoku
+        automatico.draw(seleccion);
         automatico.display();
     }
 
     return 0;
 }
-
 
 int interfaz()
 {
