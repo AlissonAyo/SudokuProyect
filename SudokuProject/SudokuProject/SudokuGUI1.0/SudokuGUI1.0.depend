@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1723008303 source:c:\users\pepe3\desktop\sudokuproject\sudokugui1.0\main.cpp
+	<windows.h>
+	<vector>
+	<string>
+	<ctime>
+	<sstream>
+
