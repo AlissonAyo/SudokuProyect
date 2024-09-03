@@ -982,7 +982,7 @@
 
 1725323172 ated upstream
 
-1725335947 source:c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\main.cpp
+1725379668 source:c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\main.cpp
 	<SFML/Graphics.hpp>
 	<SFML/Audio.hpp>
 	<iostream>
@@ -1852,13 +1852,13 @@
 	<SFML/Graphics.hpp>
 	<iostream>
 
-1725331342 c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\sudoku.h
+1725379305 c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\sudoku.h
 	<SFML/Graphics.hpp>
 
 1725331342 source:c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\mainmenu.cpp
 	"MainMenu.h"
 
-1725331342 source:c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\sudoku.cpp
+1725379305 source:c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\sudoku.cpp
 	"Sudoku.h"
 	<iostream>
 
