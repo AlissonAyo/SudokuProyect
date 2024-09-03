@@ -1,0 +1,14 @@
+# depslib dependency file v1.0
+1723041979 source:c:\users\pepe3\desktop\sudokuproject\main.cpp
+	<windows.h>
+	<vector>
+	<string>
+	<ctime>
+	<sstream>
+
+1723048048 source:c:\users\pepe3\desktop\algoritmomonedas.cpp
+	<iostream>
+
+1723048106 source:c:\users\pepe3\desktop\reinas.cpp
+	<iostream>
+
