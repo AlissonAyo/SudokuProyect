@@ -13,5 +13,16 @@ public:
     Sudoku();
     void inicializar();
     void dibujar(sf::RenderWindow &ventana);
+    bool esSeguro(int num, int i, int j);
+    bool llenar(int i, int j);
+    bool esValido(int fila, int columna, int numero);
+    void generarSudokuAleatorio(int numCeldasLlenas);
+    bool verificarSubTableroCompleto(int inicioFila, int inicioColumna);
+    void rellenarSudokuAleatorio();
+    bool resolverSudoku(int fila, int columna);
+    void generarSudokuCompleto();
+    bool verificarSubTablero(int inicioFila, int inicioColumna);
+    void eliminarNumeros(int celdasAEliminar);
+    void marcarCeldasFijas();
 };
 #endif // SUDOKU_H
