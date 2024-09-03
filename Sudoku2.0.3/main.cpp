@@ -8,12 +8,21 @@
 #include "Sudoku.h"
 
 bool esValido(int tablero[9][9], int fila, int columna, int numero) {
+    // Verifica si el número ya está en la fila
     for (int i = 0; i < 9; i++) {
-        if (tablero[fila][i] == numero || tablero[i][columna] == numero) {
+        if (tablero[fila][i] == numero) {
             return false;
         }
     }
 
+    // Verifica si el número ya está en la columna
+    for (int i = 0; i < 9; i++) {
+        if (tablero[i][columna] == numero) {
+            return false;
+        }
+    }
+
+    // Verifica si el número ya está en el bloque 3x3
     int inicioFila = fila - fila % 3;
     int inicioColumna = columna - columna % 3;
     for (int i = 0; i < 3; i++) {
@@ -27,24 +36,28 @@ bool esValido(int tablero[9][9], int fila, int columna, int numero) {
     return true;
 }
 
-
-void generarSudokuAleatorio(int tablero[9][9], int numCeldasLlenas) {
-    srand(time(0));
-    for (int i = 0; i < 9; i++) {
-        for (int j = 0; j < 9; j++) {
+// Función para generar un Sudoku válido con números aleatorios
+void generarSudokuAleatorio(int tablero[9][9], int celdasIniciales) {
+    // Inicializa el tablero con ceros (vacío)
+    for (int i = 0; i < 9; ++i) {
+        for (int j = 0; j < 9; ++j) {
             tablero[i][j] = 0;
         }
     }
 
-    for (int n = 0; n < numCeldasLlenas; n++) {
-        int fila, columna, numero;
-        do {
-            fila = rand() % 9;
-            columna = rand() % 9;
-            numero = rand() % 9 + 1;
-        } while (!esValido(tablero, fila, columna, numero) || tablero[fila][columna] != 0);
+    srand(time(0)); // Inicializa la semilla del generador de números aleatorios
 
-        tablero[fila][columna] = numero;
+    int count = 0;
+    while (count < celdasIniciales) {
+        int fila = rand() % 9;
+        int columna = rand() % 9;
+        int numero = 1 + rand() % 9; // Genera un número entre 1 y 9
+
+        // Verifica si el número es válido en esa posición
+        if (tablero[fila][columna] == 0 && esValido(tablero, fila, columna, numero)) {
+            tablero[fila][columna] = numero;
+            count++;
+        }
     }
 }
 
