@@ -980,10 +980,13 @@
 	<SFML/Audio/Export.hpp>
 	<string>
 
-1725322351 source:c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\main.cpp
+1725327311 source:c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\main.cpp
 	<SFML/Graphics.hpp>
 	<iostream>
 	<cmath>
+	<ctime>
+	<cstdlib>
+	<vector>
 	"MainMenu.h"
 	"Sudoku.h"
 
@@ -1409,7 +1412,7 @@
 	<SFML/Graphics.hpp>
 	<iostream>
 
-1725320446 c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\sudoku.h
+1725328174 c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\sudoku.h
 	<SFML/Graphics.hpp>
 
 1725320445 source:c:\users\lasso\onedrive\escritorio\github\sudoku2.0.2\mainmenu.cpp

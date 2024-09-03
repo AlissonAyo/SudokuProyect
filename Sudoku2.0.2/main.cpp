@@ -1,6 +1,9 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <cmath>
+#include <ctime>
+#include <cstdlib>
+#include <vector>
 #include "MainMenu.h"
 #include "Sudoku.h"
 
@@ -23,6 +26,46 @@ bool esValido(int tablero[9][9], int fila, int columna, int numero) {
 
     return true;
 }
+
+
+void generarSudokuAleatorio(int tablero[9][9], int numCeldasLlenas) {
+    srand(time(0));
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            tablero[i][j] = 0;
+        }
+    }
+
+    for (int n = 0; n < numCeldasLlenas; n++) {
+        int fila, columna, numero;
+        do {
+            fila = rand() % 9;
+            columna = rand() % 9;
+            numero = rand() % 9 + 1;
+        } while (!esValido(tablero, fila, columna, numero) || tablero[fila][columna] != 0);
+
+        tablero[fila][columna] = numero;
+    }
+}
+
+bool verificarSubTablero(int tablero[9][9], int inicioFila, int inicioColumna) {
+    bool numeros[10] = {false};
+    bool completo = true;
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            int num = tablero[inicioFila + i][inicioColumna + j];
+            if (num == 0) completo = false;  // Si hay una celda vacía, la subcuadrícula no está completa
+            if (num != 0) {
+                if (numeros[num]) return false;  // Número repetido, subcuadrícula inválida
+                numeros[num] = true;
+            }
+        }
+    }
+
+    return completo;  // Devuelve verdadero si la subcuadrícula está completa y correcta
+}
+
 
 // Función para rellenar el tablero con números aleatorios en modo fácil
 void rellenarSudokuAleatorio(int tablero[9][9]) {
@@ -62,19 +105,16 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
     }
     fondoMedio.setTexture(&texturaMedio);
 
-    rellenarSudokuAleatorio(sudokuMedio.tablero);
+    generarSudokuAleatorio(sudokuMedio.tablero, 30);
 
     int filaSeleccionada = 0;
     int columnaSeleccionada = 0;
-    int valorIngresado = 0;
 
-    // Animación de selección
     RectangleShape seleccion(Vector2f(38, 38));
     seleccion.setFillColor(Color::Transparent);
     seleccion.setOutlineThickness(2);
     seleccion.setOutlineColor(Color::Yellow);
 
-    // Ventana flotante para mensajes
     RenderWindow ventanaFlotante(VideoMode(300, 100), "Mensaje", Style::None);
     ventanaFlotante.setPosition(medio.getPosition() + Vector2i(330, 310));
     Text mensajeTexto;
@@ -87,6 +127,32 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
     bool mostrarVentanaFlotante = false;
     float tiempoMostrarVentana = 0;
 
+    Clock cronometro;
+    Text timerText;
+    timerText.setFont(sudokuMedio.font);
+    timerText.setCharacterSize(24);
+    timerText.setFillColor(Color::White);
+    timerText.setPosition(10, 10);
+
+    int vidas = 6;
+    Text vidasText;
+    vidasText.setFont(sudokuMedio.font);
+    vidasText.setCharacterSize(24);
+    vidasText.setFillColor(Color::White);
+    vidasText.setPosition(10, 680);
+    vidasText.setString("Vidas: " + std::to_string(vidas));
+
+    RectangleShape botonMenu(Vector2f(100, 50));
+    botonMenu.setFillColor(Color::Blue);
+    botonMenu.setPosition(850, 10);
+
+    Text textoBotonMenu;
+    textoBotonMenu.setFont(sudokuMedio.font);
+    textoBotonMenu.setString("Menu");
+    textoBotonMenu.setCharacterSize(20);
+    textoBotonMenu.setFillColor(Color::White);
+    textoBotonMenu.setPosition(870, 20);
+
     while (medio.isOpen()) {
         Event evento;
         while (medio.pollEvent(evento)) {
@@ -94,7 +160,6 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
                 medio.close();
             }
             if (evento.type == Event::KeyPressed) {
-                // Mover la selección de la celda con las teclas de dirección
                 if (evento.key.code == Keyboard::Up && filaSeleccionada > 0) {
                     filaSeleccionada--;
                 } else if (evento.key.code == Keyboard::Down && filaSeleccionada < 8) {
@@ -105,51 +170,88 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
                     columnaSeleccionada++;
                 }
 
-                // Ingresar un valor en la celda usando las teclas numéricas
                 if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9) {
-                    valorIngresado = evento.key.code - Keyboard::Num0;
+                    int valorIngresado = evento.key.code - Keyboard::Num0;
 
-                    if (esValido(sudokuMedio.tablero, filaSeleccionada, columnaSeleccionada, valorIngresado)) {
-                        sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
-                    } else {
+                        if (esValido(sudokuMedio.tablero, filaSeleccionada, columnaSeleccionada, valorIngresado)) {
+                            sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
+
+                            if (verificarSubTablero(sudokuMedio.tablero, filaSeleccionada - filaSeleccionada % 3, columnaSeleccionada - columnaSeleccionada % 3)) {
+                                for (int i = 0; i < 3; i++) {
+                                    for (int j = 0; j < 3; j++) {
+                                        int fila = filaSeleccionada - filaSeleccionada % 3 + i;
+                                        int columna = columnaSeleccionada - columnaSeleccionada % 3 + j;
+                                        sudokuMedio.grid[fila][columna].setFillColor(Color::Green);  // Cambia el color a verde
+                                    }
+                                }
+                            }
+                        } else {
                         mensajeTexto.setString("Valor no valido para esta casilla.");
                         mostrarVentanaFlotante = true;
                         tiempoMostrarVentana = 0;
+                        vidas--;
+                        vidasText.setString("Vidas: " + std::to_string(vidas));
+                        if (vidas <= 0) {
+                            mensajeTexto.setString("Game Over");
+                            mostrarVentanaFlotante = true;
+                            tiempoMostrarVentana = 0;
+                            medio.close();
+                        }
                     }
                 }
 
-                // Limpiar la casilla si presiona '0'
                 if (evento.key.code == Keyboard::Num0) {
                     sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = 0;
                 }
             }
+            if (evento.type == Event::MouseButtonPressed) {
+                if (evento.mouseButton.button == Mouse::Left) {
+                    Vector2i mousePos = Mouse::getPosition(medio);
+                    if (botonMenu.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                        medio.close();
+                    }
+                }
+            }
         }
 
-        // Actualizar posición de la selección
         seleccion.setPosition(
             sudokuMedio.offsetX + columnaSeleccionada * 40 + 1,
             sudokuMedio.offsetY + filaSeleccionada * 40 + 1
         );
 
-        // Animación de la selección
         float tiempoTranscurrido = relojAnimacion.getElapsedTime().asSeconds();
         float escala = 1 + 0.1f * sin(tiempoTranscurrido * 5);
         seleccion.setScale(escala, escala);
+
+        int segundos = static_cast<int>(cronometro.getElapsedTime().asSeconds());
+        int minutos = segundos / 60;
+        segundos %= 60;
+        timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
+
+        if (minutos >= 10) {
+            mensajeTexto.setString("Tiempo finalizado");
+            mostrarVentanaFlotante = true;
+            tiempoMostrarVentana = 0;
+            medio.close();
+        }
 
         medio.clear();
         medio.draw(fondoMedio);
         sudokuMedio.dibujar(medio);
         medio.draw(seleccion);
+        medio.draw(timerText);
+        medio.draw(vidasText);
+        medio.draw(botonMenu);
+        medio.draw(textoBotonMenu);
         medio.display();
 
-        // Mostrar ventana flotante si es necesario
         if (mostrarVentanaFlotante) {
             ventanaFlotante.clear(Color::White);
             ventanaFlotante.draw(mensajeTexto);
             ventanaFlotante.display();
 
             tiempoMostrarVentana += relojAnimacion.restart().asSeconds();
-            if (tiempoMostrarVentana >= 2) {  // Mostrar durante 2 segundos
+            if (tiempoMostrarVentana >= 2) {
                 mostrarVentanaFlotante = false;
                 ventanaFlotante.setVisible(false);
             } else {
@@ -162,6 +264,7 @@ RenderWindow medio(VideoMode(960, 720), "Facil");
 
     return 0;
 }
+
 
 
 int modoMedio() {
@@ -176,17 +279,16 @@ int modoMedio() {
     }
     fondoMedio.setTexture(&texturaMedio);
 
+    generarSudokuAleatorio(sudokuMedio.tablero, 30);
+
     int filaSeleccionada = 0;
     int columnaSeleccionada = 0;
-    int valorIngresado = 0;
 
-    // Animación de selección
     RectangleShape seleccion(Vector2f(38, 38));
     seleccion.setFillColor(Color::Transparent);
     seleccion.setOutlineThickness(2);
     seleccion.setOutlineColor(Color::Yellow);
 
-    // Ventana flotante para mensajes
     RenderWindow ventanaFlotante(VideoMode(300, 100), "Mensaje", Style::None);
     ventanaFlotante.setPosition(medio.getPosition() + Vector2i(330, 310));
     Text mensajeTexto;
@@ -199,6 +301,32 @@ int modoMedio() {
     bool mostrarVentanaFlotante = false;
     float tiempoMostrarVentana = 0;
 
+    Clock cronometro;
+    Text timerText;
+    timerText.setFont(sudokuMedio.font);
+    timerText.setCharacterSize(24);
+    timerText.setFillColor(Color::White);
+    timerText.setPosition(10, 10);
+
+    int vidas = 3;
+    Text vidasText;
+    vidasText.setFont(sudokuMedio.font);
+    vidasText.setCharacterSize(24);
+    vidasText.setFillColor(Color::White);
+    vidasText.setPosition(10, 680);
+    vidasText.setString("Vidas: " + std::to_string(vidas));
+
+    RectangleShape botonMenu(Vector2f(100, 50));
+    botonMenu.setFillColor(Color::Blue);
+    botonMenu.setPosition(850, 10);
+
+    Text textoBotonMenu;
+    textoBotonMenu.setFont(sudokuMedio.font);
+    textoBotonMenu.setString("Menu");
+    textoBotonMenu.setCharacterSize(20);
+    textoBotonMenu.setFillColor(Color::White);
+    textoBotonMenu.setPosition(870, 20);
+
     while (medio.isOpen()) {
         Event evento;
         while (medio.pollEvent(evento)) {
@@ -206,7 +334,6 @@ int modoMedio() {
                 medio.close();
             }
             if (evento.type == Event::KeyPressed) {
-                // Mover la selección de la celda con las teclas de dirección
                 if (evento.key.code == Keyboard::Up && filaSeleccionada > 0) {
                     filaSeleccionada--;
                 } else if (evento.key.code == Keyboard::Down && filaSeleccionada < 8) {
@@ -217,51 +344,88 @@ int modoMedio() {
                     columnaSeleccionada++;
                 }
 
-                // Ingresar un valor en la celda usando las teclas numéricas
                 if (evento.key.code >= Keyboard::Num1 && evento.key.code <= Keyboard::Num9) {
-                    valorIngresado = evento.key.code - Keyboard::Num0;
+                    int valorIngresado = evento.key.code - Keyboard::Num0;
 
                     if (esValido(sudokuMedio.tablero, filaSeleccionada, columnaSeleccionada, valorIngresado)) {
                         sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = valorIngresado;
+
+                        if (verificarSubTablero(sudokuMedio.tablero, filaSeleccionada - filaSeleccionada % 3, columnaSeleccionada - columnaSeleccionada % 3)) {
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    int fila = filaSeleccionada - filaSeleccionada % 3 + i;
+                                    int columna = columnaSeleccionada - columnaSeleccionada % 3 + j;
+                                    sudokuMedio.grid[fila][columna].setFillColor(Color(173, 216, 230));
+                                }
+                            }
+                        }
                     } else {
                         mensajeTexto.setString("Valor no valido para esta casilla.");
                         mostrarVentanaFlotante = true;
                         tiempoMostrarVentana = 0;
+                        vidas--;
+                        vidasText.setString("Vidas: " + std::to_string(vidas));
+                        if (vidas <= 0) {
+                            mensajeTexto.setString("Game Over");
+                            mostrarVentanaFlotante = true;
+                            tiempoMostrarVentana = 0;
+                            medio.close();
+                        }
                     }
                 }
 
-                // Limpiar la casilla si presiona '0'
                 if (evento.key.code == Keyboard::Num0) {
                     sudokuMedio.tablero[filaSeleccionada][columnaSeleccionada] = 0;
                 }
             }
+            if (evento.type == Event::MouseButtonPressed) {
+                if (evento.mouseButton.button == Mouse::Left) {
+                    Vector2i mousePos = Mouse::getPosition(medio);
+                    if (botonMenu.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                        medio.close();
+                    }
+                }
+            }
         }
 
-        // Actualizar posición de la selección
         seleccion.setPosition(
             sudokuMedio.offsetX + columnaSeleccionada * 40 + 1,
             sudokuMedio.offsetY + filaSeleccionada * 40 + 1
         );
 
-        // Animación de la selección
         float tiempoTranscurrido = relojAnimacion.getElapsedTime().asSeconds();
         float escala = 1 + 0.1f * sin(tiempoTranscurrido * 5);
         seleccion.setScale(escala, escala);
+
+        int segundos = static_cast<int>(cronometro.getElapsedTime().asSeconds());
+        int minutos = segundos / 60;
+        segundos %= 60;
+        timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
+
+        if (minutos >= 5) {
+            mensajeTexto.setString("Tiempo finalizado");
+            mostrarVentanaFlotante = true;
+            tiempoMostrarVentana = 0;
+            medio.close();
+        }
 
         medio.clear();
         medio.draw(fondoMedio);
         sudokuMedio.dibujar(medio);
         medio.draw(seleccion);
+        medio.draw(timerText);
+        medio.draw(vidasText);
+        medio.draw(botonMenu);
+        medio.draw(textoBotonMenu);
         medio.display();
 
-        // Mostrar ventana flotante si es necesario
         if (mostrarVentanaFlotante) {
             ventanaFlotante.clear(Color::White);
             ventanaFlotante.draw(mensajeTexto);
             ventanaFlotante.display();
 
             tiempoMostrarVentana += relojAnimacion.restart().asSeconds();
-            if (tiempoMostrarVentana >= 2) {  // Mostrar durante 2 segundos
+            if (tiempoMostrarVentana >= 2) {
                 mostrarVentanaFlotante = false;
                 ventanaFlotante.setVisible(false);
             } else {
@@ -274,74 +438,66 @@ int modoMedio() {
 
     return 0;
 }
-int modoDificil()
-{
+
+
+
+int modoDificil() {
     RenderWindow dificil(VideoMode(960, 720), "Difícil");
     RectangleShape fondoDificil(Vector2f(960, 720));
     Texture texturaDificil;
-    Sudoku sudokuDificil;  // Crear una instancia de la clase Sudoku
+    Sudoku sudokuDificil;
 
-    if (!texturaDificil.loadFromFile("Fondos/fondodificil.png"))
-    {
+    if (!texturaDificil.loadFromFile("Fondos/fondodificil.png")) {
         std::cerr << "No se pudo cargar la textura del fondo del modo difícil" << std::endl;
         return -1;
     }
     fondoDificil.setTexture(&texturaDificil);
 
-    while (dificil.isOpen())
-    {
+    while (dificil.isOpen()) {
         Event evento;
-        while (dificil.pollEvent(evento))
-        {
-            if (evento.type == Event::Closed)
-            {
+        while (dificil.pollEvent(evento)) {
+            if (evento.type == Event::Closed) {
                 dificil.close();
             }
         }
 
         dificil.clear();
         dificil.draw(fondoDificil);
-        sudokuDificil.dibujar(dificil);  // Dibujar la cuadrícula de Sudoku
+        sudokuDificil.dibujar(dificil);
         dificil.display();
     }
 
     return 0;
 }
 
-int modoAutomatico()
-{
+int modoAutomatico() {
     RenderWindow automatico(VideoMode(960, 720), "Automático");
     RectangleShape fondoAutomatico(Vector2f(960, 720));
     Texture texturaAutomatico;
-    Sudoku sudokuAutomatico;  // Crear una instancia de la clase Sudoku
+    Sudoku sudokuAutomatico;
 
-    if (!texturaAutomatico.loadFromFile("Fondos/fondoautomatico.png"))
-    {
+    if (!texturaAutomatico.loadFromFile("Fondos/fondoautomatico.png")) {
         std::cerr << "No se pudo cargar la textura del fondo del modo automático" << std::endl;
         return -1;
     }
     fondoAutomatico.setTexture(&texturaAutomatico);
 
-    while (automatico.isOpen())
-    {
+    while (automatico.isOpen()) {
         Event evento;
-        while (automatico.pollEvent(evento))
-        {
-            if (evento.type == Event::Closed)
-            {
+        while (automatico.pollEvent(evento)) {
+            if (evento.type == Event::Closed) {
                 automatico.close();
             }
         }
 
         automatico.clear();
         automatico.draw(fondoAutomatico);
-        sudokuAutomatico.dibujar(automatico);  // Dibujar la cuadrícula de Sudoku
+        sudokuAutomatico.dibujar(automatico);
         automatico.display();
     }
 
     return 0;
 }
-
 
 
 int interfaz()
