@@ -274,7 +274,7 @@ int modoFacil()
             segundos %= 60;
             timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
 
-            if (minutos >= 5)
+            if (minutos >= 7)
             {
                 mensajeTexto.setString("Tiempo finalizado");
                 mostrarVentanaFlotante = true;
@@ -613,7 +613,7 @@ int modoMedio()
             segundos %= 60;
             timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
 
-            if (minutos >= 5)
+            if (minutos >= 4)
             {
                 mensajeTexto.setString("Tiempo finalizado");
                 mostrarVentanaFlotante = true;
@@ -965,7 +965,7 @@ int modoDificil()
             segundos %= 60;
             timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
 
-            if (minutos >= 5)
+            if (minutos >= 2)
             {
                 mensajeTexto.setString("Tiempo finalizado");
                 mostrarVentanaFlotante = true;
