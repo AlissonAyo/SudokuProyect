@@ -928,7 +928,7 @@ int modoDificil()
             segundos %= 60;
             timerText.setString("Tiempo: " + std::to_string(minutos) + ":" + (segundos < 10 ? "0" : "") + std::to_string(segundos));
 
-            if (minutos >= 7)
+            if (minutos >= 2)
             {
                 mensajeTexto.setString("Tiempo finalizado");
                 mostrarMensaje = true;
@@ -951,7 +951,6 @@ int modoDificil()
             facil.draw(fondoMenuPausa);
             for (auto& opcion : opcionesMenu)
             {
-                // Center align each option
                 FloatRect textRect = opcion.getLocalBounds();
                 opcion.setOrigin(textRect.left + textRect.width/2.0f, textRect.top + textRect.height/2.0f);
                 opcion.setPosition(Vector2f(480, opcion.getPosition().y));
