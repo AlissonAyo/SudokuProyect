@@ -1245,8 +1245,6 @@ int interfaz()
     }
     fondoJuego.setTexture(&texturaJuego);
 
-
-    // Corrected audio code
     sf::Music musicaDeFondo;
     if (!musicaDeFondo.openFromFile("Pirata.ogg"))
     {
@@ -1254,9 +1252,8 @@ int interfaz()
         return -1;
     }
 
-    // Configurar la m�sica para que se repita continuamente
     musicaDeFondo.setLoop(true);
-    musicaDeFondo.play();  // Comenzar la m�sica de fondo
+    musicaDeFondo.play();
 
     RectangleShape fondoOpciones(Vector2f(960, 720));
     Texture texturaOpciones;
@@ -1268,19 +1265,16 @@ int interfaz()
     fondoOpciones.setTexture(&texturaOpciones);
 
     RectangleShape fondoComoJugar(Vector2f(960, 720));
-    Texture texturaComoJugar[7];
+    Texture texturaComoJugar[4];
     std::string fondos[] =
     {
         "Fondos/fondoManual.png",
         "Fondos/fondoManual1.png",
         "Fondos/fondoManual2.png",
-        "Fondos/fondoManual3.png",
-        "Fondos/fondoManual4.png",
-        "Fondos/fondoManual5.png",
-        "Fondos/fondoManual6.png"
+        "Fondos/fondoManual3.png"
     };
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 4; i++)
     {
         if (!texturaComoJugar[i].loadFromFile(fondos[i]))
         {
@@ -1359,7 +1353,7 @@ int interfaz()
                                 while (opciones.pollEvent(aevent))
                                 {
                                     if (aevent.type == Event::Closed ||
-                                            (aevent.type == Event::KeyPressed && aevent.key.code == Keyboard::Escape))
+                                        (aevent.type == Event::KeyPressed && aevent.key.code == Keyboard::Escape))
                                     {
                                         opciones.close();
                                     }
@@ -1374,6 +1368,21 @@ int interfaz()
                             ventanaComoJugar = 0;
                             fondoComoJugar.setTexture(&texturaComoJugar[ventanaComoJugar]);
                             RenderWindow comoJugar(VideoMode(960, 720), "Como Jugar");
+
+                            Texture texturaBotonRegresar, texturaBotonContinuar, texturaBotonTerminar;
+                            texturaBotonRegresar.loadFromFile("Fondos/botonRegresar.png");
+                            texturaBotonContinuar.loadFromFile("Fondos/botonContinuar.png");
+                            texturaBotonTerminar.loadFromFile("Fondos/botonTerminar.png");
+
+                            Sprite botonRegresar(texturaBotonRegresar);
+                            botonRegresar.setPosition(50, 600);
+
+                            Sprite botonContinuar(texturaBotonContinuar);
+                            botonContinuar.setPosition(750, 600);
+
+                            Sprite botonTerminar(texturaBotonTerminar);
+                            botonTerminar.setPosition(750, 600);
+
                             while (comoJugar.isOpen())
                             {
                                 Event aevent;
@@ -1384,36 +1393,59 @@ int interfaz()
                                         comoJugar.close();
                                     }
 
-                                    if (aevent.type == Event::KeyPressed)
+                                    if (aevent.type == Event::MouseButtonPressed)
                                     {
-                                        if (aevent.key.code == Keyboard::Right)
+                                        if (aevent.mouseButton.button == Mouse::Left)
                                         {
-                                            if (ventanaComoJugar < 6)
+                                            Vector2i posicionMouse = Mouse::getPosition(comoJugar);
+
+                                            // Regresar
+                                            if (botonRegresar.getGlobalBounds().contains(posicionMouse.x, posicionMouse.y))
                                             {
-                                                ventanaComoJugar++;
-                                                fondoComoJugar.setTexture(&texturaComoJugar[ventanaComoJugar]);
+                                                if (ventanaComoJugar > 0)
+                                                {
+                                                    ventanaComoJugar--;
+                                                    fondoComoJugar.setTexture(&texturaComoJugar[ventanaComoJugar]);
+                                                }
+                                                else
+                                                {
+                                                    comoJugar.close(); // Cerrar y regresar al menú principal
+                                                }
                                             }
-                                        }
-                                        else if (aevent.key.code == Keyboard::Left)
-                                        {
-                                            if (ventanaComoJugar > 0)
+
+                                            // Continuar o Terminar
+                                            if (ventanaComoJugar < 3)
                                             {
-                                                ventanaComoJugar--;
-                                                fondoComoJugar.setTexture(&texturaComoJugar[ventanaComoJugar]);
+                                                if (botonContinuar.getGlobalBounds().contains(posicionMouse.x, posicionMouse.y))
+                                                {
+                                                    ventanaComoJugar++;
+                                                    fondoComoJugar.setTexture(&texturaComoJugar[ventanaComoJugar]);
+                                                }
                                             }
                                             else
                                             {
-                                                comoJugar.close();
+                                                if (botonTerminar.getGlobalBounds().contains(posicionMouse.x, posicionMouse.y))
+                                                {
+                                                    comoJugar.close();
+                                                }
                                             }
-                                        }
-                                        else if (aevent.key.code == Keyboard::Escape)
-                                        {
-                                            comoJugar.close();
                                         }
                                     }
                                 }
+
                                 comoJugar.clear();
                                 comoJugar.draw(fondoComoJugar);
+                                comoJugar.draw(botonRegresar);
+
+                                if (ventanaComoJugar < 3)
+                                {
+                                    comoJugar.draw(botonContinuar);
+                                }
+                                else
+                                {
+                                    comoJugar.draw(botonTerminar);
+                                }
+
                                 comoJugar.display();
                             }
                         }

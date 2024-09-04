@@ -14,7 +14,7 @@ MainMenu::MainMenu(float width, float height) : subMenuActivo(false) {
 
     menuPrincipal[1].setFont(fuente);
     menuPrincipal[1].setFillColor(Color::White);
-    menuPrincipal[1].setString("Opciones");
+    menuPrincipal[1].setString("Creadores");
     menuPrincipal[1].setCharacterSize(70);
     menuPrincipal[1].setPosition(width / 2 - menuPrincipal[1].getGlobalBounds().width / 2, 300);
 
